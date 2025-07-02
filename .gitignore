@@ -40,3 +40,41 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Environment and sensitive files
+.env
+.env.local
+.env.production
+.env.development
+*.env
+
+# Firebase config - Users need to add their own Firebase config
+# Comment out the line below if you want to include your Firebase config in the repo
+# src/app/core/firebase.config.ts
+
+# Build outputs
+/dist/
+/build/
+
+# Package manager files
+package-lock.json
+yarn.lock
+
+# Log files
+*.log
+logs/
+
+# OS generated files
+*.swp
+*.swo
+*~
+
+# IDE files
+.idea/
+.vscode/settings.json
+*.sublime-*
+
+# Testing
+/coverage/
+/.nyc_output/
+/test-results/

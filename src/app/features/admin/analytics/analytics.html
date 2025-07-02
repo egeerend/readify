@@ -1,0 +1,217 @@
+<div class="analytics">
+  <div class="page-header">
+    <h1>Analytics Dashboard</h1>
+    <div class="period-selector">
+      <label for="period">Period:</label>
+      <select id="period" [(ngModel)]="selectedPeriod" (change)="onPeriodChange()" class="period-select">
+        <option value="daily">Daily</option>
+        <option value="weekly">Weekly</option>
+        <option value="monthly">Monthly</option>
+        <option value="yearly">Yearly</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="analytics-content" *ngIf="!loading">
+    <!-- Key Metrics -->
+    <div class="metrics-grid">
+      <div class="metric-card revenue">
+        <div class="metric-icon">💰</div>
+        <div class="metric-info">
+          <h3>{{ formatCurrency(analyticsData.revenue.monthly) }}</h3>
+          <p>Monthly Revenue</p>
+          <span class="metric-growth" [class]="getGrowthClass(analyticsData.revenue.growth)">
+            {{ formatPercentage(analyticsData.revenue.growth) }}
+          </span>
+        </div>
+      </div>
+
+      <div class="metric-card sales">
+        <div class="metric-icon">📚</div>
+        <div class="metric-info">
+          <h3>{{ analyticsData.sales.monthly }}</h3>
+          <p>Monthly Sales</p>
+          <span class="metric-growth" [class]="getGrowthClass(analyticsData.sales.growth)">
+            {{ formatPercentage(analyticsData.sales.growth) }}
+          </span>
+        </div>
+      </div>
+
+      <div class="metric-card users">
+        <div class="metric-icon">👥</div>
+        <div class="metric-info">
+          <h3>{{ analyticsData.users.monthly }}</h3>
+          <p>New Users</p>
+          <span class="metric-growth" [class]="getGrowthClass(analyticsData.users.growth)">
+            {{ formatPercentage(analyticsData.users.growth) }}
+          </span>
+        </div>
+      </div>
+
+      <div class="metric-card orders">
+        <div class="metric-icon">🛒</div>
+        <div class="metric-info">
+          <h3>{{ analyticsData.orders.monthly }}</h3>
+          <p>Monthly Orders</p>
+          <span class="metric-growth" [class]="getGrowthClass(analyticsData.orders.growth)">
+            {{ formatPercentage(analyticsData.orders.growth) }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-grid">
+      <!-- Revenue Chart -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Revenue Trend</h3>
+          <span class="chart-total">Total: {{ formatCurrency(analyticsData.revenue.total) }}</span>
+        </div>
+        <div class="chart-container">
+          <div class="simple-chart">
+            <div class="chart-bars">
+              <div 
+                *ngFor="let value of revenueChartData.datasets[0].data; let i = index" 
+                class="chart-bar"
+                [style.height.%]="(value / 4000) * 100"
+                [title]="revenueChartData.labels[i] + ': ' + formatCurrency(value)">
+                <span class="bar-value">{{ formatCurrency(value) }}</span>
+              </div>
+            </div>
+            <div class="chart-labels">
+              <span *ngFor="let label of revenueChartData.labels">{{ label }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sales Chart -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Sales Trend</h3>
+          <span class="chart-total">Total: {{ analyticsData.sales.total }} books</span>
+        </div>
+        <div class="chart-container">
+          <div class="simple-chart">
+            <div class="chart-bars sales-bars">
+              <div 
+                *ngFor="let value of salesChartData.datasets[0].data; let i = index" 
+                class="chart-bar"
+                [style.height.%]="(value / 350) * 100"
+                [title]="salesChartData.labels[i] + ': ' + value + ' books'">
+                <span class="bar-value">{{ value }}</span>
+              </div>
+            </div>
+            <div class="chart-labels">
+              <span *ngFor="let label of salesChartData.labels">{{ label }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Secondary Analytics -->
+    <div class="secondary-analytics">
+      <!-- Top Categories -->
+      <div class="analytics-card">
+        <div class="card-header">
+          <h3>Top Categories</h3>
+          <span class="view-all">View All</span>
+        </div>
+        <div class="categories-list">
+          <div class="category-item" *ngFor="let category of topCategories">
+            <div class="category-info">
+              <div class="category-color" [style.background-color]="category.color"></div>
+              <div class="category-details">
+                <h4>{{ category.name }}</h4>
+                <p>{{ category.sales }} sales</p>
+              </div>
+            </div>
+            <div class="category-percentage">
+              <span>{{ category.percentage }}%</span>
+              <div class="percentage-bar">
+                <div 
+                  class="percentage-fill" 
+                  [style.width.%]="category.percentage"
+                  [style.background-color]="category.color">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Books -->
+      <div class="analytics-card">
+        <div class="card-header">
+          <h3>Top Selling Books</h3>
+          <span class="view-all">View All</span>
+        </div>
+        <div class="books-list">
+          <div class="book-item" *ngFor="let book of topBooks; let i = index">
+            <div class="book-rank">{{ i + 1 }}</div>
+            <div class="book-details">
+              <h4>{{ book.title }}</h4>
+              <p>{{ book.sales }} sales • {{ formatCurrency(book.revenue) }}</p>
+            </div>
+            <div class="book-trend">
+              <span class="trend-icon">{{ getTrendIcon(book.trend) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="analytics-card">
+        <div class="card-header">
+          <h3>Recent Activity</h3>
+          <span class="view-all">View All</span>
+        </div>
+        <div class="activity-list">
+          <div class="activity-item" *ngFor="let activity of recentActivity">
+            <div class="activity-icon">{{ getActivityIcon(activity.type) }}</div>
+            <div class="activity-details">
+              <p class="activity-message">{{ activity.message }}</p>
+              <span class="activity-time">{{ activity.time }}</span>
+            </div>
+            <div class="activity-amount" *ngIf="activity.amount > 0">
+              {{ formatCurrency(activity.amount) }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="summary-section">
+      <div class="summary-card">
+        <h3>Performance Summary</h3>
+        <div class="summary-stats">
+          <div class="summary-stat">
+            <span class="stat-label">Average Order Value</span>
+            <span class="stat-value">{{ formatCurrency(analyticsData.revenue.total / analyticsData.orders.total) }}</span>
+          </div>
+          <div class="summary-stat">
+            <span class="stat-label">Books per Order</span>
+            <span class="stat-value">{{ (analyticsData.sales.total / analyticsData.orders.total).toFixed(1) }}</span>
+          </div>
+          <div class="summary-stat">
+            <span class="stat-label">Customer Lifetime Value</span>
+            <span class="stat-value">{{ formatCurrency(analyticsData.revenue.total / analyticsData.users.total) }}</span>
+          </div>
+          <div class="summary-stat">
+            <span class="stat-label">Conversion Rate</span>
+            <span class="stat-value">{{ ((analyticsData.orders.total / analyticsData.users.total) * 100).toFixed(1) }}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Loading analytics data...</p>
+  </div>
+</div>

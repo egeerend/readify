@@ -1,0 +1,146 @@
+<!-- Dashboard Content -->
+<div class="dashboard-content">
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon books">📚</div>
+      <div class="stat-info">
+        <h3>{{ stats.totalBooks }}</h3>
+        <p>Total Books</p>
+      </div>
+      <div class="stat-trend positive">+12%</div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon users">👥</div>
+      <div class="stat-info">
+        <h3>{{ stats.totalUsers }}</h3>
+        <p>Total Users</p>
+      </div>
+      <div class="stat-trend positive">+8%</div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon orders">🛒</div>
+      <div class="stat-info">
+        <h3>{{ stats.totalOrders }}</h3>
+        <p>Total Orders</p>
+      </div>
+      <div class="stat-trend positive">+15%</div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-icon revenue">💰</div>
+      <div class="stat-info">
+        <h3>${{ stats.revenue }}</h3>
+        <p>Revenue</p>
+      </div>
+      <div class="stat-trend positive">+23%</div>
+    </div>
+  </div>
+
+  <!-- Dashboard Grid -->
+  <div class="dashboard-grid">
+    <!-- Recent Activities -->
+    <div class="dashboard-card">
+      <div class="card-header">
+        <h3>Recent Activities</h3>
+        <button class="btn-link">View All</button>
+      </div>
+      <div class="card-content">
+        <div class="activity-list">
+          <div class="activity-item" *ngFor="let activity of recentActivities">
+            <div class="activity-icon">{{ getActivityIcon(activity.type) }}</div>
+            <div class="activity-details">
+              <p class="activity-action">{{ activity.action }}</p>
+              <p class="activity-item-name">{{ activity.item }}</p>
+              <span class="activity-time">{{ activity.time }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Selling Books -->
+    <div class="dashboard-card">
+      <div class="card-header">
+        <h3>Top Selling Books</h3>
+        <button class="btn-link">View All</button>
+      </div>
+      <div class="card-content">
+        <div class="top-books-list">
+          <div class="book-item" *ngFor="let book of topBooks; let i = index">
+            <div class="book-rank">{{ i + 1 }}</div>
+            <div class="book-details">
+              <h4>{{ book.title }}</h4>
+              <p>{{ book.sales }} sales • ${{ book.revenue }}</p>
+            </div>
+            <div class="book-progress">
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="(book.sales / 200) * 100"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="dashboard-card">
+      <div class="card-header">
+        <h3>Quick Actions</h3>
+      </div>
+      <div class="card-content">
+        <div class="quick-actions">
+          <button class="action-btn primary" routerLink="/admin/books">
+            <span class="action-icon">➕</span>
+            Add New Book
+          </button>
+          <button class="action-btn secondary" routerLink="/admin/users">
+            <span class="action-icon">👤</span>
+            Manage Users
+          </button>
+          <button class="action-btn accent" routerLink="/admin/analytics">
+            <span class="action-icon">📊</span>
+            View Reports
+          </button>
+          <button class="action-btn warning">
+            <span class="action-icon">🔔</span>
+            Send Newsletter
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="dashboard-card">
+      <div class="card-header">
+        <h3>System Status</h3>
+      </div>
+      <div class="card-content">
+        <div class="status-list">
+          <div class="status-item">
+            <div class="status-indicator online"></div>
+            <span>Database Connection</span>
+            <span class="status-value">Online</span>
+          </div>
+          <div class="status-item">
+            <div class="status-indicator online"></div>
+            <span>Payment Gateway</span>
+            <span class="status-value">Active</span>
+          </div>
+          <div class="status-item">
+            <div class="status-indicator warning"></div>
+            <span>Email Service</span>
+            <span class="status-value">Slow</span>
+          </div>
+          <div class="status-item">
+            <div class="status-indicator online"></div>
+            <span>CDN Status</span>
+            <span class="status-value">Optimal</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

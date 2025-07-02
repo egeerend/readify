@@ -1,0 +1,240 @@
+.login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+
+  h2 {
+    color: #fff;
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 2.5rem;
+    font-weight: 300;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  form {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+    width: 100%;
+    max-width: 450px;
+    transform: translateY(0);
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    // Error and Success Messages
+    .error-message, .success-message {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .error-message {
+      background: #fee;
+      color: #c53030;
+      border: 1px solid #feb2b2;
+    }
+
+    .success-message {
+      background: #f0fff4;
+      color: #2d7d32;
+      border: 1px solid #9ae6b4;
+    }
+
+    // Name Fields for Registration
+    .name-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
+
+      .field-group {
+        display: flex;
+        flex-direction: column;
+      }
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-weight: 500;
+      font-size: 0.95rem;
+      letter-spacing: 0.3px;
+    }
+
+    input {
+      width: 100%;
+      padding: 15px 20px;
+      margin-bottom: 20px;
+      border: 2px solid #e1e5e9;
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      background: #f8f9fa;
+      box-sizing: border-box;
+
+      &:focus {
+        outline: none;
+        border-color: #667eea;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        transform: translateY(-1px);
+      }
+
+      &::placeholder {
+        color: #adb5bd;
+      }
+
+      &:hover {
+        border-color: #c6d0f5;
+      }
+
+      &:invalid {
+        border-color: #e53e3e;
+      }
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+
+      &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(0);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+      }
+
+      &:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .loading-spinner {
+        animation: spin 1s linear infinite;
+      }
+    }
+
+    .form-footer {
+      text-align: center;
+      margin-top: 25px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+
+      p {
+        color: #666;
+        margin: 0;
+        font-size: 0.95rem;
+      }
+
+      .toggle-btn {
+        background: none;
+        border: none;
+        color: #667eea;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: underline;
+        font-size: 0.95rem;
+        margin-left: 5px;
+        transition: color 0.3s ease;
+
+        &:hover {
+          color: #5a67d8;
+        }
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .login-container {
+    padding: 10px;
+
+    h2 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+
+    form {
+      padding: 30px 25px;
+      max-width: 400px;
+
+      .name-fields {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .login-container {
+    form {
+      padding: 25px 20px;
+    }
+
+    h2 {
+      font-size: 1.8rem;
+    }
+  }
+}
+
+// Animation for form entrance
+.login-container form {
+  animation: slideInUp 0.6s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

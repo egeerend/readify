@@ -1,0 +1,260 @@
+<div class="user-management">
+  <div class="page-header">
+    <h1>User Management</h1>
+    <div class="header-stats">
+      <div class="stat-item">
+        <span class="stat-value">{{ getTotalUsers() }}</span>
+        <span class="stat-label">Total Users</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">{{ getActiveUsers() }}</span>
+        <span class="stat-label">Active Users</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">{{ getAdminUsers() }}</span>
+        <span class="stat-label">Admins</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="filters-section">
+    <div class="search-box">
+      <input 
+        type="text" 
+        placeholder="Search users by name or email..." 
+        [(ngModel)]="searchTerm"
+        (input)="onSearch()"
+        class="search-input">
+      <span class="search-icon">🔍</span>
+    </div>
+    
+    <div class="filter-controls">
+      <select [(ngModel)]="selectedRole" (change)="onRoleFilter()" class="filter-select">
+        <option value="">All Roles</option>
+        <option value="user">Users</option>
+        <option value="admin">Admins</option>
+      </select>
+      
+      <select [(ngModel)]="selectedStatus" (change)="onStatusFilter()" class="filter-select">
+        <option value="">All Status</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+      </select>
+      
+      <select [(ngModel)]="sortBy" (change)="onSort()" class="filter-select">
+        <option value="createdAt">Sort by Join Date</option>
+        <option value="displayName">Sort by Name</option>
+        <option value="email">Sort by Email</option>
+        <option value="totalOrders">Sort by Orders</option>
+        <option value="totalSpent">Sort by Spending</option>
+        <option value="lastLoginAt">Sort by Last Login</option>
+      </select>        <button class="sort-direction-btn" (click)="toggleSortDirection()">
+          {{ getSortDirectionSymbol() }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Users Table -->    <div class="users-table-container" *ngIf="!loading && filteredUsers.length > 0">
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Orders</th>
+          <th>Total Spent</th>
+          <th>Join Date</th>
+          <th>Last Login</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of filteredUsers" class="user-row">
+          <td class="user-info">
+            <img 
+              [src]="user.photoURL || getDefaultAvatar(user.displayName)" 
+              [alt]="user.displayName"
+              class="user-avatar"
+              (error)="onImageError($event, user)">
+            <div class="user-details">
+              <h4>{{ user.displayName }}</h4>
+              <span class="user-id">ID: {{ user.id }}</span>
+            </div>
+          </td>
+          <td class="user-email">{{ user.email }}</td>
+          <td>
+            <span class="role-badge" [class]="'role-' + user.role">
+              {{ getRoleDisplayName(user) }}
+            </span>
+          </td>
+          <td>
+            <span class="status-badge" [class]="getUserStatusColor(user)">
+              {{ getStatusDisplay(user) }}
+            </span>
+          </td>
+          <td class="user-orders">{{ user.totalOrders }}</td>
+          <td class="user-spent">{{ formatCurrency(user.totalSpent) }}</td>
+          <td class="user-date">{{ formatDate(user.createdAt) }}</td>
+          <td class="user-date">
+            {{ user.lastLoginAt ? formatDate(user.lastLoginAt) : 'Never' }}
+          </td>
+          <td class="user-actions">
+            <div class="action-buttons">
+              <button 
+                class="btn btn-sm btn-info" 
+                (click)="viewUserDetails(user)"
+                title="View Details">
+                👁️
+              </button>
+              <button 
+                class="btn btn-sm" 
+                [class]="getStatusButtonClass(user)"
+                (click)="toggleUserStatus(user)"
+                [title]="getStatusButtonTitle(user)">
+                {{ getStatusIcon(user) }}
+              </button>
+              <button 
+                *ngIf="isUserRole(user)"
+                class="btn btn-sm btn-secondary" 
+                (click)="promoteToAdmin(user)"
+                title="Promote to Admin">
+                👑
+              </button>
+              <button 
+                *ngIf="isAdminRole(user)"
+                class="btn btn-sm btn-secondary" 
+                (click)="demoteFromAdmin(user)"
+                title="Demote from Admin">
+                👤
+              </button>
+              <button 
+                *ngIf="!isAdminRole(user)"
+                class="btn btn-sm btn-danger" 
+                (click)="deleteUser(user)"
+                title="Delete User">
+                🗑️
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!loading && filteredUsers.length === 0">
+    <div class="empty-icon">👥</div>
+    <h3>No Users Found</h3>
+    <p *ngIf="hasActiveFilters()">Try adjusting your filters or search terms.</p>
+    <p *ngIf="hasNoActiveFilters()">No users have registered yet.</p>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Loading users...</p>
+  </div>
+</div>
+
+<!-- User Details Modal -->  <div class="modal-overlay" *ngIf="showUserDetails && selectedUser" (click)="closeUserDetails()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>User Details</h2>
+      <button class="close-btn" (click)="closeUserDetails()">✕</button>
+    </div>
+    
+    <div class="user-detail-content">
+      <div class="user-profile">
+        <img 
+          [src]="selectedUser.photoURL || getDefaultAvatar(selectedUser.displayName)" 
+          [alt]="selectedUser.displayName"
+          class="profile-avatar">
+        <div class="profile-info">
+          <h3>{{ selectedUser.displayName }}</h3>
+          <p class="profile-email">{{ selectedUser.email }}</p>
+          <div class="profile-badges">
+            <span class="role-badge" [class]="'role-' + selectedUser.role">
+              {{ getRoleDisplayName(selectedUser) }}
+            </span>
+            <span class="status-badge" [class]="getUserStatusColor(selectedUser)">
+              {{ getStatusDisplay(selectedUser) }}
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="user-stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">🛒</div>
+          <div class="stat-content">
+            <h4>{{ selectedUser.totalOrders }}</h4>
+            <p>Total Orders</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">💰</div>
+          <div class="stat-content">
+            <h4>{{ formatCurrency(selectedUser.totalSpent) }}</h4>
+            <p>Total Spent</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">📅</div>
+          <div class="stat-content">
+            <h4>{{ formatDate(selectedUser.createdAt) }}</h4>
+            <p>Join Date</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">🕒</div>
+          <div class="stat-content">
+            <h4>{{ selectedUser.lastLoginAt ? formatDate(selectedUser.lastLoginAt) : 'Never' }}</h4>
+            <p>Last Login</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="user-actions-section">
+        <h4>Quick Actions</h4>
+        <div class="quick-actions">
+          <button 
+            class="action-btn" 
+            [class]="getModalStatusClass(selectedUser)"
+            (click)="toggleUserStatus(selectedUser)">
+            <span class="action-icon">{{ getStatusIcon(selectedUser) }}</span>
+            {{ getStatusButtonText(selectedUser) }}
+          </button>
+          
+          <button 
+            *ngIf="isUserRole(selectedUser)"
+            class="action-btn secondary"
+            (click)="promoteToAdmin(selectedUser)">
+            <span class="action-icon">👑</span>
+            Promote to Admin
+          </button>
+          
+          <button 
+            *ngIf="isAdminRole(selectedUser)"
+            class="action-btn secondary"
+            (click)="demoteFromAdmin(selectedUser)">
+            <span class="action-icon">👤</span>
+            Demote from Admin
+          </button>
+          
+          <button 
+            *ngIf="!isAdminRole(selectedUser)"
+            class="action-btn danger"
+            (click)="deleteUser(selectedUser); closeUserDetails()">
+            <span class="action-icon">🗑️</span>
+            Delete User
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

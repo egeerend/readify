@@ -1,0 +1,68 @@
+<header class="main-header">
+  <div class="container">
+    <div class="header-content">
+      <!-- Logo -->
+      <div class="logo">
+        <a routerLink="/">
+          <h1>📚 Readify</h1>
+        </a>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="main-nav" [class.active]="isMenuOpen">
+        <ul>
+          <li><a href="#home" (click)="scrollToSection('home', $event)" [class.active]="activeSection === 'home'">Home</a></li>
+          <li><a href="#categories" (click)="scrollToSection('categories', $event)" [class.active]="activeSection === 'categories'">Categories</a></li>
+          <li><a href="#featured" (click)="scrollToSection('featured', $event)" [class.active]="activeSection === 'featured'">Featured</a></li>
+          <li><a href="#bestsellers" (click)="scrollToSection('bestsellers', $event)" [class.active]="activeSection === 'bestsellers'">Bestsellers</a></li>
+          <li><a href="#new-arrivals" (click)="scrollToSection('new-arrivals', $event)" [class.active]="activeSection === 'new-arrivals'">New Arrivals</a></li>
+        </ul>
+      </nav>
+
+      <!-- User Actions -->
+      <div class="user-actions">
+        <app-currency-selector></app-currency-selector>
+        <button class="search-btn" routerLink="/search">
+          <span class="search-icon">🔍</span>
+        </button>
+        <button class="cart-btn" routerLink="/cart">
+          <span class="cart-icon">🛒</span>
+          <span class="cart-count" *ngIf="(cartItemCount$ | async)! > 0">{{ cartItemCount$ | async }}</span>
+          <span class="sync-indicator" 
+                [class.synced]="currentUser" 
+                [class.local]="!currentUser"
+                [title]="currentUser ? 'Cart synced with your account' : 'Cart saved locally only'">
+            {{ currentUser ? '☁️' : '💾' }}
+          </span>
+        </button>
+        
+        <!-- Authentication Status -->
+        <div *ngIf="currentUser; else loginButton" class="user-menu">
+          <div class="user-info">
+            <span class="user-name">👤 {{ currentUser.displayName || currentUser.email }}</span>
+            <div class="user-dropdown">
+              <button class="dropdown-item">Profile</button>
+              <button class="dropdown-item">My Books</button>
+              <button class="dropdown-item">Settings</button>
+              <button *ngIf="isAdmin()" class="dropdown-item admin-link" routerLink="/admin">
+                🔧 Admin Panel
+              </button>
+              <button class="dropdown-item logout-btn" (click)="signOut()">Sign Out</button>
+            </div>
+          </div>
+        </div>
+        
+        <ng-template #loginButton>
+          <a routerLink="/login" class="login-btn">Sign In</a>
+        </ng-template>
+      </div>
+
+      <!-- Mobile Menu Toggle -->
+      <button class="mobile-menu-toggle" (click)="toggleMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </div>
+</header>

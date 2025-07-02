@@ -1,0 +1,309 @@
+<!-- Hero Section -->
+<section id="home" class="hero-section">
+  <div class="hero-content">
+    <h1>Welcome to Readify</h1>
+    <p>Discover your next favorite book from our vast collection</p>
+    <div class="hero-buttons">
+      <button class="btn-primary" routerLink="/search">Browse Books</button>
+      <button class="btn-secondary" routerLink="/login">Sign In</button>
+    </div>
+  </div>
+  <div class="hero-image">
+    <img src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80" alt="Books">
+  </div>
+  
+  <!-- Scroll indicator -->
+  <div class="scroll-indicator">
+    <div class="scroll-arrow">
+      <span>↓</span>
+    </div>
+    <p>Scroll to explore</p>
+  </div>
+</section>
+
+<!-- Categories Section -->
+<section id="categories" class="categories-section">
+  <div class="container">
+    <div class="section-header">
+      <h2>
+        <i class="fas fa-tags me-2"></i>
+        Browse by Category
+      </h2>
+      <p class="section-subtitle">Explore our diverse collection of books across different genres</p>
+    </div>
+    
+    <div class="category-carousel">
+      <button 
+        class="carousel-arrow carousel-arrow-left" 
+        (click)="scrollCategoriesLeft()"
+        [disabled]="categoryScrollPosition <= 0"
+      >
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      
+      <div class="category-carousel-container">
+        <div class="category-items">
+          <div *ngFor="let category of categories" 
+               class="category-card clickable" 
+               [attr.data-category-id]="category.id"
+               (click)="onCategoryClick(category)">
+            <div class="category-icon">
+              {{ category.icon || '📚' }}
+            </div>
+            <h3>{{ category.displayName }}</h3>
+            <p class="category-description">{{ category.description }}</p>
+            <div class="category-overlay">
+              <i class="fas" [class.fa-arrow-right]="category.id !== 'more'" [class.fa-th-large]="category.id === 'more'"></i>
+              <span>{{ category.id === 'more' ? 'View All' : 'Explore' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <button 
+        class="carousel-arrow carousel-arrow-right" 
+        (click)="scrollCategoriesRight()"
+      >
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- Featured Books Section -->
+<section id="featured" class="featured-section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Featured Books</h2>
+      <div class="header-actions">
+        <button class="refresh-btn" (click)="loadBooks()" [disabled]="isLoading">
+          <i class="fas fa-sync-alt" [class.fa-spin]="isLoading"></i> Refresh
+        </button>
+        <button class="view-more-btn" routerLink="/search">Show More →</button>
+      </div>
+    </div>
+    
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading featured books...</p>
+    </div>
+    
+    <!-- Books Grid -->
+    <div *ngIf="!isLoading" class="books-grid">
+      <div *ngFor="let book of featuredBooks; trackBy: trackByBookId" class="book-card" [routerLink]="['/books', book.id]">
+        <div class="book-cover">
+          <div class="image-container">
+            <img 
+              [src]="book.coverImage" 
+              [alt]="book.title" 
+              (error)="onImageError($event)"
+              (load)="onImageLoad($event)"
+              loading="lazy"
+              class="book-image"
+              [style.display]="'block'"
+            />
+            <div class="image-placeholder" *ngIf="!book.coverImage">
+              <i class="fas fa-book fa-3x"></i>
+              <p>{{ book.title }}</p>
+            </div>
+          </div>
+          <div class="book-overlay">
+            <button 
+              class="quick-view-btn"
+              (click)="quickViewBook(book, $event)"
+              title="View book details"
+            >
+              <i class="fas fa-eye"></i>
+              Quick View
+            </button>
+            <button 
+              class="add-to-cart-btn"
+              (click)="addToCart(book, $event)"
+              [disabled]="book.id && isInCart(book.id)"
+              [class.btn-success]="book.id && isInCart(book.id)"
+              [title]="(book.id && isInCart(book.id)) ? 'Already in cart' : 'Add to cart'"
+            >
+              <i class="fas" [class.fa-shopping-cart]="!book.id || !isInCart(book.id)" [class.fa-check]="book.id && isInCart(book.id)"></i>
+              {{ (book.id && isInCart(book.id)) ? 'In Cart' : 'Add to Cart' }}
+            </button>
+          </div>
+          <div class="book-badges">
+            <span *ngIf="book.isFeatured" class="badge featured">Featured</span>
+            <span *ngIf="book.isBestseller" class="badge bestseller">Bestseller</span>
+            <span *ngIf="book.isNew" class="badge new">New</span>
+          </div>
+        </div>
+        <div class="book-info">
+          <h3 class="book-title">{{ book.title }}</h3>
+          <p class="book-author">by {{ book.author }}</p>
+          <p class="book-category">{{ book.category }}</p>
+          <div class="book-rating" *ngIf="book.rating > 0">
+            <div class="stars">
+              <span *ngFor="let star of getRatingStars(book.rating)" 
+                    class="star" 
+                    [class.full]="star === 'full'"
+                    [class.half]="star === 'half'"
+                    [class.empty]="star === 'empty'">★</span>
+            </div>
+            <span class="rating-text">({{ book.rating }})</span>
+          </div>
+          <div class="book-price">
+            <span class="current-price">{{ book.price | priceFormat }}</span>
+            <span *ngIf="book.originalPrice && book.originalPrice > book.price" class="original-price">{{ book.originalPrice | priceFormat }}</span>
+          </div>
+          
+          <!-- Add to Cart Button -->
+          <div class="book-actions">
+            <button 
+              class="btn btn-primary btn-sm"
+              (click)="addToCart(book, $event)"
+              [disabled]="book.id && isInCart(book.id)"
+              [class.btn-success]="book.id && isInCart(book.id)"
+            >
+              <i class="fas" [class.fa-shopping-cart]="!book.id || !isInCart(book.id)" [class.fa-check]="book.id && isInCart(book.id)"></i>
+              {{ (book.id && isInCart(book.id)) ? 'In Cart' : 'Add to Cart' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="section-footer" *ngIf="!isLoading">
+      <p class="more-text">Discover hundreds more books in our collection</p>
+      <button class="explore-btn" routerLink="/search">Show All Featured Books</button>
+    </div>
+  </div>
+</section>
+
+<!-- Bestsellers Section -->
+<section id="bestsellers" class="bestsellers-section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Bestsellers</h2>
+      <button class="view-more-btn" routerLink="/books">Show More →</button>
+    </div>
+    <div class="books-row">
+      <div *ngFor="let book of bestsellerBooks" class="book-card-small" [routerLink]="['/books', book.id]">
+        <!-- ...existing code... -->
+        <img 
+          [src]="book.coverImage" 
+          [alt]="book.title" 
+          (error)="onImageError($event)"
+          loading="lazy"
+          style="min-height: 100px; background: #f8f9fa;"
+        />
+        <div class="book-details">
+          <h4>{{ book.title }}</h4>
+          <p>{{ book.author }}</p>
+          <div class="rating-price">
+            <div class="stars">
+              <span *ngFor="let star of getRatingStars(book.rating)" 
+                    class="star" 
+                    [class.full]="star === 'full'"
+                    [class.half]="star === 'half'"
+                    [class.empty]="star === 'empty'">★</span>
+            </div>
+            <span class="price">{{ book.price | priceFormat }}</span>
+          </div>
+          <button 
+            class="add-to-cart-btn-small"
+            (click)="addToCart(book, $event)"
+            [disabled]="book.id && isInCart(book.id)"
+            [class.btn-success]="book.id && isInCart(book.id)"
+            [title]="(book.id && isInCart(book.id)) ? 'Already in cart' : 'Add to cart'"
+          >
+            <i class="fas" [class.fa-shopping-cart]="!book.id || !isInCart(book.id)" [class.fa-check]="book.id && isInCart(book.id)"></i>
+            {{ (book.id && isInCart(book.id)) ? 'In Cart' : 'Add to Cart' }}
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="section-footer">
+      <p class="more-text">📈 Top-selling books loved by readers worldwide</p>
+      <button class="explore-btn" routerLink="/search">Show All Bestsellers</button>
+    </div>
+  </div>
+</section>
+
+<!-- New Arrivals Section -->
+<section id="new-arrivals" class="new-arrivals-section">
+  <div class="container">
+    <div class="section-header">
+      <h2>New Arrivals</h2>
+      <button class="view-more-btn" routerLink="/books">Show More →</button>
+    </div>
+    <div class="books-grid">
+      <div *ngFor="let book of newArrivals" class="book-card" [routerLink]="['/books', book.id]">
+        <!-- ...existing code... -->
+        <div class="book-cover">
+          <img 
+            [src]="book.coverImage" 
+            [alt]="book.title" 
+            (error)="onImageError($event)"
+            loading="lazy"
+            style="min-height: 300px; background: #f8f9fa;"
+          />
+          <div class="book-overlay">
+            <button 
+              class="quick-view-btn"
+              (click)="quickViewBook(book, $event)"
+              title="View book details"
+            >
+              <i class="fas fa-eye"></i>
+              Quick View
+            </button>
+            <button 
+              class="add-to-cart-btn"
+              (click)="addToCart(book, $event)"
+              [disabled]="book.id && isInCart(book.id)"
+              [class.btn-success]="book.id && isInCart(book.id)"
+              [title]="(book.id && isInCart(book.id)) ? 'Already in cart' : 'Add to cart'"
+            >
+              <i class="fas" [class.fa-shopping-cart]="!book.id || !isInCart(book.id)" [class.fa-check]="book.id && isInCart(book.id)"></i>
+              {{ (book.id && isInCart(book.id)) ? 'In Cart' : 'Add to Cart' }}
+            </button>
+          </div>
+          <div class="book-badges">
+            <span class="badge new">New Arrival</span>
+          </div>
+        </div>
+        <div class="book-info">
+          <h3 class="book-title">{{ book.title }}</h3>
+          <p class="book-author">by {{ book.author }}</p>
+          <div class="book-rating">
+            <div class="stars">
+              <span *ngFor="let star of getRatingStars(book.rating)" 
+                    class="star" 
+                    [class.full]="star === 'full'"
+                    [class.half]="star === 'half'"
+                    [class.empty]="star === 'empty'">★</span>
+            </div>
+            <span class="rating-text">({{ book.rating }})</span>
+          </div>
+          <div class="book-price">
+            <span class="current-price">{{ book.price | priceFormat }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="section-footer">
+      <p class="more-text">✨ Fresh releases and latest additions to our library</p>
+      <button class="explore-btn" routerLink="/search">Show All New Arrivals</button>
+    </div>
+  </div>
+</section>
+
+<!-- Newsletter Section -->
+<section class="newsletter-section">
+  <div class="container">
+    <div class="newsletter-content">
+      <h2>Stay Updated</h2>
+      <p>Get the latest book recommendations and exclusive offers</p>
+      <div class="newsletter-form">
+        <input type="email" placeholder="Enter your email address">
+        <button class="btn-primary">Subscribe</button>
+      </div>
+    </div>
+  </div>
+</section>

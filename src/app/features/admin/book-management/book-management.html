@@ -1,0 +1,260 @@
+<div class="book-management">
+  <div class="page-header">
+    <h1>Book Management</h1>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="showOpenLibrarySearch()" *ngIf="!showGoogleSearch">
+        <span class="btn-icon">🔍</span>
+        Search Open Library
+      </button>
+      <button class="btn btn-outline-secondary" (click)="hideOpenLibrarySearch()" *ngIf="showGoogleSearch">
+        <span class="btn-icon">❌</span>
+        Hide Open Library Search
+      </button>
+      <button class="btn btn-primary" (click)="showAddBookForm()">
+        <span class="btn-icon">➕</span>
+        Add New Book
+      </button>
+    </div>
+  </div>
+
+  <!-- Google Books Search Component -->
+  <div *ngIf="showGoogleSearch" class="open-library-section">
+    <app-open-library-search></app-open-library-search>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="filters-section">
+    <div class="search-box">
+      <input 
+        type="text" 
+        placeholder="Search books by title, author, or ISBN..." 
+        [(ngModel)]="searchTerm"
+        (input)="onSearch()"
+        class="search-input">
+      <span class="search-icon">🔍</span>
+    </div>
+    
+    <div class="filter-controls">
+      <select [(ngModel)]="selectedCategory" (change)="onCategoryFilter()" class="filter-select">
+        <option value="">All Categories</option>
+        <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+      </select>
+      
+      <select [(ngModel)]="sortBy" (change)="onSort()" class="filter-select">
+        <option value="title">Sort by Title</option>
+        <option value="author">Sort by Author</option>
+        <option value="price">Sort by Price</option>
+        <option value="stock">Sort by Stock</option>
+        <option value="createdAt">Sort by Date Added</option>
+      </select>
+      
+      <button class="sort-direction-btn" (click)="toggleSortDirection()">
+        {{ sortDirection === 'asc' ? '↑' : '↓' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Books Grid -->
+  <div class="books-grid" *ngIf="!loading && filteredBooks.length > 0">
+    <div class="book-card" *ngFor="let book of filteredBooks">
+      <div class="book-image">
+        <img [src]="book.coverImage" [alt]="book.title" onerror="this.src='https://via.placeholder.com/200x300?text=No+Image'">
+        <div class="book-badges">
+          <span class="badge featured" *ngIf="book.isFeatured">Featured</span>
+          <span class="badge bestseller" *ngIf="book.isBestseller">Bestseller</span>
+          <span class="badge new-arrival" *ngIf="book.isNew">New</span>
+        </div>
+      </div>
+      
+      <div class="book-info">
+        <h3 class="book-title">{{ book.title }}</h3>
+        <p class="book-author">by {{ book.author }}</p>
+        <p class="book-category">{{ book.category }}</p>
+        <p class="book-isbn">ISBN: {{ book.isbn }}</p>
+        <div class="book-stats">
+          <span class="book-price">${{ book.price }}</span>
+          <span class="book-stock" [class.low-stock]="(book.stock || 0) < 10">Stock: {{ book.stock || 0 }}</span>
+        </div>
+      </div>
+      
+      <div class="book-actions">
+        <button class="btn btn-sm btn-secondary" (click)="editBook(book)">
+          <span class="btn-icon">✏️</span>
+          Edit
+        </button>
+        <button class="btn btn-sm btn-danger" (click)="deleteBook(book)">
+          <span class="btn-icon">🗑️</span>
+          Delete
+        </button>
+      </div>
+      
+      <div class="book-toggles">
+        <label class="toggle-label">
+          <input type="checkbox" [checked]="book.isFeatured" (change)="toggleBookStatus(book, 'isFeatured')">
+          <span class="toggle-slider"></span>
+          Featured
+        </label>
+        <label class="toggle-label">
+          <input type="checkbox" [checked]="book.isBestseller" (change)="toggleBookStatus(book, 'isBestseller')">
+          <span class="toggle-slider"></span>
+          Bestseller
+        </label>
+        <label class="toggle-label">
+          <input type="checkbox" [checked]="book.isNew" (change)="toggleBookStatus(book, 'isNew')">
+          <span class="toggle-slider"></span>
+          New Arrival
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!loading && filteredBooks.length === 0">
+    <div class="empty-icon">📚</div>
+    <h3>No Books Found</h3>
+    <p *ngIf="searchTerm || selectedCategory">Try adjusting your filters or search terms.</p>
+    <p *ngIf="!searchTerm && !selectedCategory">Start by adding your first book to the inventory.</p>
+    <button class="btn btn-primary" (click)="showAddBookForm()">Add New Book</button>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Loading books...</p>
+  </div>
+</div>
+
+<!-- Add/Edit Book Modal -->
+<div class="modal-overlay" *ngIf="showAddForm" (click)="cancelForm()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ isEditing ? 'Edit Book' : 'Add New Book' }}</h2>
+      <button class="close-btn" (click)="cancelForm()">✕</button>
+    </div>
+    
+    <form [formGroup]="bookForm" (ngSubmit)="onSubmit()" class="book-form">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="title">Title *</label>
+          <input 
+            type="text" 
+            id="title" 
+            formControlName="title" 
+            class="form-input"
+            [class.error]="bookForm.get('title')?.invalid && bookForm.get('title')?.touched">
+          <span class="error-message" *ngIf="getFormFieldError('title')">{{ getFormFieldError('title') }}</span>
+        </div>
+        
+        <div class="form-group">
+          <label for="author">Author *</label>
+          <input 
+            type="text" 
+            id="author" 
+            formControlName="author" 
+            class="form-input"
+            [class.error]="bookForm.get('author')?.invalid && bookForm.get('author')?.touched">
+          <span class="error-message" *ngIf="getFormFieldError('author')">{{ getFormFieldError('author') }}</span>
+        </div>
+        
+        <div class="form-group">
+          <label for="isbn">ISBN *</label>
+          <input 
+            type="text" 
+            id="isbn" 
+            formControlName="isbn" 
+            class="form-input"
+            placeholder="e.g. 9780123456789"
+            [class.error]="bookForm.get('isbn')?.invalid && bookForm.get('isbn')?.touched">
+          <span class="error-message" *ngIf="getFormFieldError('isbn')">{{ getFormFieldError('isbn') }}</span>
+        </div>
+        
+        <div class="form-group">
+          <label for="price">Price *</label>
+          <input 
+            type="number" 
+            id="price" 
+            formControlName="price" 
+            class="form-input"
+            step="0.01"
+            min="0"
+            [class.error]="bookForm.get('price')?.invalid && bookForm.get('price')?.touched">
+          <span class="error-message" *ngIf="getFormFieldError('price')">{{ getFormFieldError('price') }}</span>
+        </div>
+        
+        <div class="form-group">
+          <label for="category">Category *</label>
+          <select 
+            id="category" 
+            formControlName="category" 
+            class="form-input"
+            [class.error]="bookForm.get('category')?.invalid && bookForm.get('category')?.touched">
+            <option value="">Select Category</option>
+            <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+          </select>
+          <span class="error-message" *ngIf="getFormFieldError('category')">{{ getFormFieldError('category') }}</span>
+        </div>
+        
+        <div class="form-group">
+          <label for="stock">Stock Quantity *</label>
+          <input 
+            type="number" 
+            id="stock" 
+            formControlName="stock" 
+            class="form-input"
+            min="0"
+            [class.error]="bookForm.get('stock')?.invalid && bookForm.get('stock')?.touched">
+          <span class="error-message" *ngIf="getFormFieldError('stock')">{{ getFormFieldError('stock') }}</span>
+        </div>
+      </div>
+      
+      <div class="form-group full-width">
+        <label for="imageUrl">Image URL *</label>
+        <input 
+          type="url" 
+          id="imageUrl" 
+          formControlName="imageUrl" 
+          class="form-input"
+          placeholder="https://example.com/book-cover.jpg"
+          [class.error]="bookForm.get('imageUrl')?.invalid && bookForm.get('imageUrl')?.touched">
+        <span class="error-message" *ngIf="getFormFieldError('imageUrl')">{{ getFormFieldError('imageUrl') }}</span>
+      </div>
+      
+      <div class="form-group full-width">
+        <label for="description">Description *</label>
+        <textarea 
+          id="description" 
+          formControlName="description" 
+          class="form-textarea"
+          rows="4"
+          placeholder="Enter book description..."
+          [class.error]="bookForm.get('description')?.invalid && bookForm.get('description')?.touched"></textarea>
+        <span class="error-message" *ngIf="getFormFieldError('description')">{{ getFormFieldError('description') }}</span>
+      </div>
+      
+      <div class="form-checkboxes">
+        <label class="checkbox-label">
+          <input type="checkbox" formControlName="featured">
+          <span class="checkbox-slider"></span>
+          Featured Book
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" formControlName="bestseller">
+          <span class="checkbox-slider"></span>
+          Bestseller
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" formControlName="newArrival">
+          <span class="checkbox-slider"></span>
+          New Arrival
+        </label>
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="cancelForm()">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="bookForm.invalid">
+          {{ isEditing ? 'Update Book' : 'Add Book' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

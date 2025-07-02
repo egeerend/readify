@@ -1,0 +1,196 @@
+<div class="open-library-search">
+  <div class="search-header">
+    <h2 class="mb-4">Open Library Search & Import</h2>
+    <p class="text-muted">Search and import books from Open Library API</p>
+  </div>
+
+  <!-- Search Form -->
+  <div class="search-form card mb-4">
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-3">
+          <label for="searchType" class="form-label">Search Type</label>
+          <select id="searchType" class="form-select" [(ngModel)]="searchType">
+            <option value="general">General Search</option>
+            <option value="title">By Title</option>
+            <option value="author">By Author</option>
+            <option value="subject">By Subject</option>
+          </select>
+        </div>
+        <div class="col-md-7">
+          <label for="searchQuery" class="form-label">Search Query</label>
+          <input 
+            type="text" 
+            id="searchQuery"
+            class="form-control" 
+            [(ngModel)]="searchQuery"
+            placeholder="Enter your search query..."
+            (keyup.enter)="searchBooks()"
+          >
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <button 
+            class="btn btn-primary w-100" 
+            (click)="searchBooks()"
+            [disabled]="isLoading"
+          >
+            <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+            {{ isLoading ? 'Searching...' : 'Search' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="alert alert-danger" role="alert">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    {{ error }}
+    <button type="button" class="btn-close" (click)="clearError()" aria-label="Close"></button>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-3 text-muted">Searching Open Library...</p>
+  </div>
+
+  <!-- Search Results -->
+  <div *ngIf="searchResults.length > 0 && !isLoading" class="search-results">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4>Search Results ({{ searchResults.length }} books found)</h4>
+      <button class="btn btn-outline-secondary" (click)="clearSearch()">
+        <i class="fas fa-times me-2"></i>Clear Results
+      </button>
+    </div>
+
+    <div class="row">
+      <div class="col-xl-6 col-lg-12 mb-4" *ngFor="let book of searchResults">
+        <div class="card book-card h-100">
+          <div class="row g-0 h-100">
+            <!-- Book Cover -->
+            <div class="col-md-4">
+              <div class="book-cover-container">
+                <img 
+                  [src]="getCoverImage(book)" 
+                  [alt]="book.title"
+                  class="book-cover"
+                  (error)="onImageError($event)"
+                >
+              </div>
+            </div>
+            
+            <!-- Book Details -->
+            <div class="col-md-8">
+              <div class="card-body d-flex flex-column h-100">
+                <div class="book-info flex-grow-1">
+                  <h5 class="card-title book-title">{{ book.title }}</h5>
+                  <p class="card-subtitle mb-2 text-muted">
+                    <i class="fas fa-user me-1"></i>
+                    {{ getAuthorsString(book.author_name) }}
+                  </p>
+                  
+                  <div class="book-metadata mb-3">
+                    <div class="metadata-item" *ngIf="book.publisher && book.publisher.length > 0">
+                      <i class="fas fa-building me-1"></i>
+                      <small>{{ book.publisher[0] }}</small>
+                    </div>
+                    <div class="metadata-item" *ngIf="book.first_publish_year">
+                      <i class="fas fa-calendar me-1"></i>
+                      <small>{{ getPublishedDate(book.first_publish_year) }}</small>
+                    </div>
+                    <div class="metadata-item" *ngIf="getISBN(book) !== 'N/A'">
+                      <i class="fas fa-hashtag me-1"></i>
+                      <small>ISBN: {{ getISBN(book) }}</small>
+                    </div>
+                    <div class="metadata-item" *ngIf="book.edition_count">
+                      <i class="fas fa-book me-1"></i>
+                      <small>{{ book.edition_count }} editions</small>
+                    </div>
+                  </div>
+                  
+                  <div class="book-categories mb-2" *ngIf="book.subject && book.subject.length > 0">
+                    <span class="badge bg-light text-dark me-1" *ngFor="let subject of book.subject.slice(0, 3)">
+                      {{ subject }}
+                    </span>
+                  </div>
+
+                  <div class="book-rating mb-2" *ngIf="book.ratings_average && book.ratings_average > 0">
+                    <div class="stars mb-1">
+                      <i *ngFor="let star of [1,2,3,4,5]" 
+                        class="fas fa-star"
+                        [class.text-warning]="star <= (book.ratings_average || 0)"
+                        [class.text-muted]="star > (book.ratings_average || 0)">
+                      </i>
+                      <span class="ms-2">
+                        {{ book.ratings_average }}/5
+                        <span *ngIf="book.ratings_count">({{ book.ratings_count }} reviews)</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Price Display -->
+                  <div class="book-price mb-3">
+                    <span class="price-current h5 text-primary me-2">${{ generatePrice(book).toFixed(2) }}</span>
+                    <span class="price-original text-muted text-decoration-line-through">${{ (generatePrice(book) * 1.2).toFixed(2) }}</span>
+                  </div>
+                </div>
+                
+                <div class="book-actions mt-auto">
+                  <div class="d-flex flex-column gap-2">
+                    <!-- View Details Button -->
+                    <button 
+                      class="btn btn-outline-primary btn-sm" 
+                      (click)="viewBookDetail(book, $event)"
+                    >
+                      <i class="fas fa-eye me-2"></i>View Details
+                    </button>
+                    
+                    <!-- Add to Cart Button -->
+                    <button 
+                      class="btn btn-success btn-sm" 
+                      (click)="addToCart(book, $event)"
+                      [disabled]="isInCart(book)"
+                      [class.btn-secondary]="isInCart(book)"
+                    >
+                      <i class="fas" [class.fa-shopping-cart]="!isInCart(book)" [class.fa-check]="isInCart(book)"></i>
+                      <span class="ms-2">{{ isInCart(book) ? 'In Cart' : 'Add to Cart' }}</span>
+                      <span *ngIf="getBookQuantity(book) > 0" class="badge bg-light text-dark ms-2">{{ getBookQuantity(book) }}</span>
+                    </button>
+                    
+                    <!-- Import to Catalog Button -->
+                    <button 
+                      class="btn btn-primary btn-sm" 
+                      (click)="importBook(book)"
+                      [disabled]="isImporting(book.key)"
+                    >
+                      <span *ngIf="isImporting(book.key)" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                      <i *ngIf="!isImporting(book.key)" class="fas fa-download me-2"></i>
+                      {{ isImporting(book.key) ? 'Importing...' : 'Import to Catalog' }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- No Results -->
+  <div *ngIf="searchResults.length === 0 && !isLoading && searchQuery" class="no-results text-center py-5">
+    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+    <h4>No books found</h4>
+    <p class="text-muted">Try adjusting your search query or search criteria.</p>
+  </div>
+
+  <!-- Initial State -->
+  <div *ngIf="searchResults.length === 0 && !isLoading && !searchQuery" class="initial-state text-center py-5">
+    <i class="fas fa-book fa-3x text-muted mb-3"></i>
+    <h4>Search Open Library</h4>
+    <p class="text-muted">Enter a search query above to find and import books from Open Library.</p>
+  </div>
+</div>

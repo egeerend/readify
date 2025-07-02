@@ -1,0 +1,891 @@
+<div class="settings">
+  <div class="page-header">
+    <h1>Settings</h1>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="exportSettings()">
+        <span class="btn-icon">📤</span>
+        Export Settings
+      </button>
+      <label class="btn btn-secondary import-btn">
+        <span class="btn-icon">📥</span>
+        Import Settings
+        <input type="file" accept=".json" (change)="importSettings($event)" hidden>
+      </label>
+    </div>
+  </div>
+
+  <!-- Success/Error Message -->
+  <div class="message-bar" *ngIf="saveMessage" [class.success]="!saveMessage.includes('Error')">
+    {{ saveMessage }}
+  </div>
+
+  <!-- Settings Tabs -->
+  <div class="settings-container">
+    <nav class="settings-tabs">
+      <button 
+        class="tab-button" 
+        [class.active]="activeTab === 'general'"
+        (click)="setActiveTab('general')">
+        <span class="tab-icon">⚙️</span>
+        General
+      </button>
+      <button 
+        class="tab-button" 
+        [class.active]="activeTab === 'notifications'"
+        (click)="setActiveTab('notifications')">
+        <span class="tab-icon">🔔</span>
+        Notifications
+      </button>
+      <button 
+        class="tab-button" 
+        [class.active]="activeTab === 'security'"
+        (click)="setActiveTab('security')">
+        <span class="tab-icon">🔒</span>
+        Security
+      </button>
+      <button 
+        class="tab-button" 
+        [class.active]="activeTab === 'pricing'"
+        (click)="setActiveTab('pricing')">
+        <span class="tab-icon">💰</span>
+        Pricing
+      </button>
+    </nav>
+
+    <!-- General Settings Tab -->
+    <div class="tab-content" *ngIf="activeTab === 'general'">
+      <form [formGroup]="generalForm" (ngSubmit)="saveGeneralSettings()" class="settings-form">
+        <div class="form-section">
+          <h3>Site Information</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="siteName">Site Name *</label>
+              <input 
+                type="text" 
+                id="siteName" 
+                formControlName="siteName" 
+                class="form-input"
+                [class.error]="generalForm.get('siteName')?.invalid && generalForm.get('siteName')?.touched">
+              <span class="error-message" *ngIf="getFormFieldError(generalForm, 'siteName')">
+                {{ getFormFieldError(generalForm, 'siteName') }}
+              </span>
+            </div>
+            
+            <div class="form-group full-width">
+              <label for="siteDescription">Site Description *</label>
+              <textarea 
+                id="siteDescription" 
+                formControlName="siteDescription" 
+                class="form-textarea"
+                rows="3"
+                [class.error]="generalForm.get('siteDescription')?.invalid && generalForm.get('siteDescription')?.touched"></textarea>
+              <span class="error-message" *ngIf="getFormFieldError(generalForm, 'siteDescription')">
+                {{ getFormFieldError(generalForm, 'siteDescription') }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>Contact Information</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="contactEmail">Contact Email *</label>
+              <input 
+                type="email" 
+                id="contactEmail" 
+                formControlName="contactEmail" 
+                class="form-input"
+                [class.error]="generalForm.get('contactEmail')?.invalid && generalForm.get('contactEmail')?.touched">
+              <span class="error-message" *ngIf="getFormFieldError(generalForm, 'contactEmail')">
+                {{ getFormFieldError(generalForm, 'contactEmail') }}
+              </span>
+            </div>
+            
+            <div class="form-group">
+              <label for="supportEmail">Support Email *</label>
+              <input 
+                type="email" 
+                id="supportEmail" 
+                formControlName="supportEmail" 
+                class="form-input"
+                [class.error]="generalForm.get('supportEmail')?.invalid && generalForm.get('supportEmail')?.touched">
+              <span class="error-message" *ngIf="getFormFieldError(generalForm, 'supportEmail')">
+                {{ getFormFieldError(generalForm, 'supportEmail') }}
+              </span>
+            </div>
+            
+            <div class="form-group">
+              <label for="phoneNumber">Phone Number *</label>
+              <input 
+                type="tel" 
+                id="phoneNumber" 
+                formControlName="phoneNumber" 
+                class="form-input"
+                [class.error]="generalForm.get('phoneNumber')?.invalid && generalForm.get('phoneNumber')?.touched">
+              <span class="error-message" *ngIf="getFormFieldError(generalForm, 'phoneNumber')">
+                {{ getFormFieldError(generalForm, 'phoneNumber') }}
+              </span>
+            </div>
+            
+            <div class="form-group">
+              <label for="businessHours">Business Hours *</label>
+              <input 
+                type="text" 
+                id="businessHours" 
+                formControlName="businessHours" 
+                class="form-input"
+                placeholder="e.g., Mon-Fri: 9AM-6PM"
+                [class.error]="generalForm.get('businessHours')?.invalid && generalForm.get('businessHours')?.touched">
+              <span class="error-message" *ngIf="getFormFieldError(generalForm, 'businessHours')">
+                {{ getFormFieldError(generalForm, 'businessHours') }}
+              </span>
+            </div>
+            
+            <div class="form-group full-width">
+              <label for="address">Address *</label>
+              <textarea 
+                id="address" 
+                formControlName="address" 
+                class="form-textarea"
+                rows="2"
+                [class.error]="generalForm.get('address')?.invalid && generalForm.get('address')?.touched"></textarea>
+              <span class="error-message" *ngIf="getFormFieldError(generalForm, 'address')">
+                {{ getFormFieldError(generalForm, 'address') }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>Social Media</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="facebook">Facebook URL</label>
+              <input 
+                type="url" 
+                id="facebook" 
+                formControlName="facebook" 
+                class="form-input"
+                placeholder="https://facebook.com/yourpage"
+                [class.error]="generalForm.get('facebook')?.invalid && generalForm.get('facebook')?.touched">
+              <span class="error-message" *ngIf="getFormFieldError(generalForm, 'facebook')">
+                {{ getFormFieldError(generalForm, 'facebook') }}
+              </span>
+            </div>
+            
+            <div class="form-group">
+              <label for="twitter">Twitter URL</label>
+              <input 
+                type="url" 
+                id="twitter" 
+                formControlName="twitter" 
+                class="form-input"
+                placeholder="https://twitter.com/yourhandle"
+                [class.error]="generalForm.get('twitter')?.invalid && generalForm.get('twitter')?.touched">
+              <span class="error-message" *ngIf="getFormFieldError(generalForm, 'twitter')">
+                {{ getFormFieldError(generalForm, 'twitter') }}
+              </span>
+            </div>
+            
+            <div class="form-group">
+              <label for="instagram">Instagram URL</label>
+              <input 
+                type="url" 
+                id="instagram" 
+                formControlName="instagram" 
+                class="form-input"
+                placeholder="https://instagram.com/yourhandle"
+                [class.error]="generalForm.get('instagram')?.invalid && generalForm.get('instagram')?.touched">
+              <span class="error-message" *ngIf="getFormFieldError(generalForm, 'instagram')">
+                {{ getFormFieldError(generalForm, 'instagram') }}
+              </span>
+            </div>
+            
+            <div class="form-group">
+              <label for="linkedin">LinkedIn URL</label>
+              <input 
+                type="url" 
+                id="linkedin" 
+                formControlName="linkedin" 
+                class="form-input"
+                placeholder="https://linkedin.com/company/yourcompany"
+                [class.error]="generalForm.get('linkedin')?.invalid && generalForm.get('linkedin')?.touched">
+              <span class="error-message" *ngIf="getFormFieldError(generalForm, 'linkedin')">
+                {{ getFormFieldError(generalForm, 'linkedin') }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>Commerce Settings</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="currency">Currency *</label>
+              <select 
+                id="currency" 
+                formControlName="currency" 
+                class="form-input"
+                [class.error]="generalForm.get('currency')?.invalid && generalForm.get('currency')?.touched">
+                <option *ngFor="let currency of currencies" [value]="currency.code">
+                  {{ currency.name }} ({{ currency.symbol }})
+                </option>
+              </select>
+              <span class="error-message" *ngIf="getFormFieldError(generalForm, 'currency')">
+                {{ getFormFieldError(generalForm, 'currency') }}
+              </span>
+            </div>
+            
+            <div class="form-group">
+              <label for="taxRate">Tax Rate (%) *</label>
+              <input 
+                type="number" 
+                id="taxRate" 
+                formControlName="taxRate" 
+                class="form-input"
+                step="0.1"
+                min="0"
+                max="100"
+                [class.error]="generalForm.get('taxRate')?.invalid && generalForm.get('taxRate')?.touched">
+              <span class="error-message" *ngIf="getFormFieldError(generalForm, 'taxRate')">
+                {{ getFormFieldError(generalForm, 'taxRate') }}
+              </span>
+            </div>
+            
+            <div class="form-group">
+              <label for="shippingCost">Shipping Cost *</label>
+              <input 
+                type="number" 
+                id="shippingCost" 
+                formControlName="shippingCost" 
+                class="form-input"
+                step="0.01"
+                min="0"
+                [class.error]="generalForm.get('shippingCost')?.invalid && generalForm.get('shippingCost')?.touched">
+              <span class="error-message" *ngIf="getFormFieldError(generalForm, 'shippingCost')">
+                {{ getFormFieldError(generalForm, 'shippingCost') }}
+              </span>
+            </div>
+            
+            <div class="form-group">
+              <label for="freeShippingThreshold">Free Shipping Threshold *</label>
+              <input 
+                type="number" 
+                id="freeShippingThreshold" 
+                formControlName="freeShippingThreshold" 
+                class="form-input"
+                step="0.01"
+                min="0"
+                [class.error]="generalForm.get('freeShippingThreshold')?.invalid && generalForm.get('freeShippingThreshold')?.touched">
+              <span class="error-message" *ngIf="getFormFieldError(generalForm, 'freeShippingThreshold')">
+                {{ getFormFieldError(generalForm, 'freeShippingThreshold') }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="resetToDefaults()">
+            Reset to Defaults
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="generalForm.invalid || loading">
+            <span class="btn-icon" *ngIf="loading">⏳</span>
+            <span class="btn-icon" *ngIf="!loading">💾</span>
+            {{ loading ? 'Saving...' : 'Save General Settings' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Notifications Settings Tab -->
+    <div class="tab-content" *ngIf="activeTab === 'notifications'">
+      <form [formGroup]="notificationForm" (ngSubmit)="saveNotificationSettings()" class="settings-form">
+        <div class="form-section">
+          <h3>Email Notifications</h3>
+          <div class="notification-settings">
+            <div class="notification-item">
+              <div class="notification-info">
+                <h4>Email Notifications</h4>
+                <p>Enable email notifications for admin activities</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" formControlName="emailNotifications">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            
+            <div class="notification-item">
+              <div class="notification-info">
+                <h4>Order Notifications</h4>
+                <p>Receive notifications when new orders are placed</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" formControlName="orderNotifications">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            
+            <div class="notification-item">
+              <div class="notification-info">
+                <h4>User Registration Notifications</h4>
+                <p>Get notified when new users register</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" formControlName="userRegistrationNotifications">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            
+            <div class="notification-item">
+              <div class="notification-info">
+                <h4>Low Stock Notifications</h4>
+                <p>Alert when book inventory is running low</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" formControlName="lowStockNotifications">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            
+            <div class="notification-item">
+              <div class="notification-info">
+                <h4>Review Notifications</h4>
+                <p>Notifications for new book reviews</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" formControlName="reviewNotifications">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            
+            <div class="notification-item">
+              <div class="notification-info">
+                <h4>Newsletter Enabled</h4>
+                <p>Enable newsletter functionality for users</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" formControlName="newsletterEnabled">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="resetToDefaults()">
+            Reset to Defaults
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="loading">
+            <span class="btn-icon" *ngIf="loading">⏳</span>
+            <span class="btn-icon" *ngIf="!loading">💾</span>
+            {{ loading ? 'Saving...' : 'Save Notification Settings' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Security Settings Tab -->
+    <div class="tab-content" *ngIf="activeTab === 'security'">
+      <form [formGroup]="securityForm" (ngSubmit)="saveSecuritySettings()" class="settings-form">
+        <div class="form-section">
+          <h3>Authentication Settings</h3>
+          <div class="security-settings">
+            <div class="security-item">
+              <div class="security-info">
+                <h4>Two-Factor Authentication</h4>
+                <p>Require 2FA for admin accounts</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" formControlName="twoFactorAuth">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            
+            <div class="form-group">
+              <label for="sessionTimeout">Session Timeout *</label>
+              <select 
+                id="sessionTimeout" 
+                formControlName="sessionTimeout" 
+                class="form-input"
+                [class.error]="securityForm.get('sessionTimeout')?.invalid && securityForm.get('sessionTimeout')?.touched">
+                <option *ngFor="let timeout of sessionTimeouts" [value]="timeout.value">
+                  {{ timeout.label }}
+                </option>
+              </select>
+              <span class="error-message" *ngIf="getFormFieldError(securityForm, 'sessionTimeout')">
+                {{ getFormFieldError(securityForm, 'sessionTimeout') }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>Password Policy</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="passwordMinLength">Minimum Password Length *</label>
+              <input 
+                type="number" 
+                id="passwordMinLength" 
+                formControlName="passwordMinLength" 
+                class="form-input"
+                min="6"
+                max="20"
+                [class.error]="securityForm.get('passwordMinLength')?.invalid && securityForm.get('passwordMinLength')?.touched">
+              <span class="error-message" *ngIf="getFormFieldError(securityForm, 'passwordMinLength')">
+                {{ getFormFieldError(securityForm, 'passwordMinLength') }}
+              </span>
+            </div>
+            
+            <div class="security-item">
+              <div class="security-info">
+                <h4>Require Special Characters</h4>
+                <p>Passwords must contain special characters</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" formControlName="requireSpecialChars">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>Account Security</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="maxLoginAttempts">Max Login Attempts *</label>
+              <input 
+                type="number" 
+                id="maxLoginAttempts" 
+                formControlName="maxLoginAttempts" 
+                class="form-input"
+                min="3"
+                max="10"
+                [class.error]="securityForm.get('maxLoginAttempts')?.invalid && securityForm.get('maxLoginAttempts')?.touched">
+              <span class="error-message" *ngIf="getFormFieldError(securityForm, 'maxLoginAttempts')">
+                {{ getFormFieldError(securityForm, 'maxLoginAttempts') }}
+              </span>
+            </div>
+            
+            <div class="form-group">
+              <label for="accountLockoutDuration">Account Lockout Duration (minutes) *</label>
+              <input 
+                type="number" 
+                id="accountLockoutDuration" 
+                formControlName="accountLockoutDuration" 
+                class="form-input"
+                min="5"
+                max="60"
+                [class.error]="securityForm.get('accountLockoutDuration')?.invalid && securityForm.get('accountLockoutDuration')?.touched">
+              <span class="error-message" *ngIf="getFormFieldError(securityForm, 'accountLockoutDuration')">
+                {{ getFormFieldError(securityForm, 'accountLockoutDuration') }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="resetToDefaults()">
+            Reset to Defaults
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="securityForm.invalid || loading">
+            <span class="btn-icon" *ngIf="loading">⏳</span>
+            <span class="btn-icon" *ngIf="!loading">💾</span>
+            {{ loading ? 'Saving...' : 'Save Security Settings' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Pricing Settings Tab -->
+    <div class="tab-content" *ngIf="activeTab === 'pricing'">
+      <form [formGroup]="pricingForm" (ngSubmit)="savePricingSettings()" class="settings-form">
+        <div class="form-section">
+          <h3>📚 Base Prices by Category</h3>
+          <p>Set the base price for each book category (in USD)</p>
+          
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="fiction">Fiction</label>
+              <div class="input-group">
+                <span class="input-prefix">$</span>
+                <input 
+                  type="number" 
+                  id="fiction" 
+                  formControlName="fiction"
+                  step="0.01"
+                  min="0"
+                  [class.error]="pricingForm.get('fiction')?.invalid && pricingForm.get('fiction')?.touched">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="programming">Programming</label>
+              <div class="input-group">
+                <span class="input-prefix">$</span>
+                <input 
+                  type="number" 
+                  id="programming" 
+                  formControlName="programming"
+                  step="0.01"
+                  min="0"
+                  [class.error]="pricingForm.get('programming')?.invalid && pricingForm.get('programming')?.touched">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="science">Science</label>
+              <div class="input-group">
+                <span class="input-prefix">$</span>
+                <input 
+                  type="number" 
+                  id="science" 
+                  formControlName="science"
+                  step="0.01"
+                  min="0"
+                  [class.error]="pricingForm.get('science')?.invalid && pricingForm.get('science')?.touched">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="history">History</label>
+              <div class="input-group">
+                <span class="input-prefix">$</span>
+                <input 
+                  type="number" 
+                  id="history" 
+                  formControlName="history"
+                  step="0.01"
+                  min="0"
+                  [class.error]="pricingForm.get('history')?.invalid && pricingForm.get('history')?.touched">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="biography">Biography</label>
+              <div class="input-group">
+                <span class="input-prefix">$</span>
+                <input 
+                  type="number" 
+                  id="biography" 
+                  formControlName="biography"
+                  step="0.01"
+                  min="0"
+                  [class.error]="pricingForm.get('biography')?.invalid && pricingForm.get('biography')?.touched">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="business">Business</label>
+              <div class="input-group">
+                <span class="input-prefix">$</span>
+                <input 
+                  type="number" 
+                  id="business" 
+                  formControlName="business"
+                  step="0.01"
+                  min="0"
+                  [class.error]="pricingForm.get('business')?.invalid && pricingForm.get('business')?.touched">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="philosophy">Philosophy</label>
+              <div class="input-group">
+                <span class="input-prefix">$</span>
+                <input 
+                  type="number" 
+                  id="philosophy" 
+                  formControlName="philosophy"
+                  step="0.01"
+                  min="0"
+                  [class.error]="pricingForm.get('philosophy')?.invalid && pricingForm.get('philosophy')?.touched">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="psychology">Psychology</label>
+              <div class="input-group">
+                <span class="input-prefix">$</span>
+                <input 
+                  type="number" 
+                  id="psychology" 
+                  formControlName="psychology"
+                  step="0.01"
+                  min="0"
+                  [class.error]="pricingForm.get('psychology')?.invalid && pricingForm.get('psychology')?.touched">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="art">Art</label>
+              <div class="input-group">
+                <span class="input-prefix">$</span>
+                <input 
+                  type="number" 
+                  id="art" 
+                  formControlName="art"
+                  step="0.01"
+                  min="0"
+                  [class.error]="pricingForm.get('art')?.invalid && pricingForm.get('art')?.touched">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="health">Health</label>
+              <div class="input-group">
+                <span class="input-prefix">$</span>
+                <input 
+                  type="number" 
+                  id="health" 
+                  formControlName="health"
+                  step="0.01"
+                  min="0"
+                  [class.error]="pricingForm.get('health')?.invalid && pricingForm.get('health')?.touched">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="education">Education</label>
+              <div class="input-group">
+                <span class="input-prefix">$</span>
+                <input 
+                  type="number" 
+                  id="education" 
+                  formControlName="education"
+                  step="0.01"
+                  min="0"
+                  [class.error]="pricingForm.get('education')?.invalid && pricingForm.get('education')?.touched">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="religion">Religion</label>
+              <div class="input-group">
+                <span class="input-prefix">$</span>
+                <input 
+                  type="number" 
+                  id="religion" 
+                  formControlName="religion"
+                  step="0.01"
+                  min="0"
+                  [class.error]="pricingForm.get('religion')?.invalid && pricingForm.get('religion')?.touched">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="general">General</label>
+              <div class="input-group">
+                <span class="input-prefix">$</span>
+                <input 
+                  type="number" 
+                  id="general" 
+                  formControlName="general"
+                  step="0.01"
+                  min="0"
+                  [class.error]="pricingForm.get('general')?.invalid && pricingForm.get('general')?.touched">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>⭐ Price Modifiers</h3>
+          <p>Multipliers applied to base prices (1.0 = no change, 1.5 = 50% increase, 0.8 = 20% decrease)</p>
+          
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="bestsellerModifier">Bestseller Multiplier</label>
+              <input 
+                type="number" 
+                id="bestsellerModifier" 
+                formControlName="bestsellerModifier"
+                step="0.1"
+                min="0.1"
+                max="5"
+                [class.error]="pricingForm.get('bestsellerModifier')?.invalid && pricingForm.get('bestsellerModifier')?.touched">
+            </div>
+
+            <div class="form-group">
+              <label for="featuredModifier">Featured Book Multiplier</label>
+              <input 
+                type="number" 
+                id="featuredModifier" 
+                formControlName="featuredModifier"
+                step="0.1"
+                min="0.1"
+                max="5"
+                [class.error]="pricingForm.get('featuredModifier')?.invalid && pricingForm.get('featuredModifier')?.touched">
+            </div>
+
+            <div class="form-group">
+              <label for="newBookModifier">New Release Multiplier</label>
+              <input 
+                type="number" 
+                id="newBookModifier" 
+                formControlName="newBookModifier"
+                step="0.1"
+                min="0.1"
+                max="5"
+                [class.error]="pricingForm.get('newBookModifier')?.invalid && pricingForm.get('newBookModifier')?.touched">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>📄 Page Count Modifiers</h3>
+          <p>Price adjustments based on book length</p>
+          
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="under200Pages">Under 200 pages</label>
+              <input 
+                type="number" 
+                id="under200Pages" 
+                formControlName="under200Pages"
+                step="0.1"
+                min="0.1"
+                max="5"
+                [class.error]="pricingForm.get('under200Pages')?.invalid && pricingForm.get('under200Pages')?.touched">
+            </div>
+
+            <div class="form-group">
+              <label for="between200And400Pages">200-400 pages</label>
+              <input 
+                type="number" 
+                id="between200And400Pages" 
+                formControlName="between200And400Pages"
+                step="0.1"
+                min="0.1"
+                max="5"
+                [class.error]="pricingForm.get('between200And400Pages')?.invalid && pricingForm.get('between200And400Pages')?.touched">
+            </div>
+
+            <div class="form-group">
+              <label for="between400And600Pages">400-600 pages</label>
+              <input 
+                type="number" 
+                id="between400And600Pages" 
+                formControlName="between400And600Pages"
+                step="0.1"
+                min="0.1"
+                max="5"
+                [class.error]="pricingForm.get('between400And600Pages')?.invalid && pricingForm.get('between400And600Pages')?.touched">
+            </div>
+
+            <div class="form-group">
+              <label for="over600Pages">Over 600 pages</label>
+              <input 
+                type="number" 
+                id="over600Pages" 
+                formControlName="over600Pages"
+                step="0.1"
+                min="0.1"
+                max="5"
+                [class.error]="pricingForm.get('over600Pages')?.invalid && pricingForm.get('over600Pages')?.touched">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>📅 Publication Date Modifiers</h3>
+          <p>Price adjustments based on when the book was published</p>
+          
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="currentYear">Current Year (2025)</label>
+              <input 
+                type="number" 
+                id="currentYear" 
+                formControlName="currentYear"
+                step="0.1"
+                min="0.1"
+                max="5"
+                [class.error]="pricingForm.get('currentYear')?.invalid && pricingForm.get('currentYear')?.touched">
+            </div>
+
+            <div class="form-group">
+              <label for="recentYears">Recent (Last 3 years)</label>
+              <input 
+                type="number" 
+                id="recentYears" 
+                formControlName="recentYears"
+                step="0.1"
+                min="0.1"
+                max="5"
+                [class.error]="pricingForm.get('recentYears')?.invalid && pricingForm.get('recentYears')?.touched">
+            </div>
+
+            <div class="form-group">
+              <label for="olderBooks">Older Books (3+ years)</label>
+              <input 
+                type="number" 
+                id="olderBooks" 
+                formControlName="olderBooks"
+                step="0.1"
+                min="0.1"
+                max="5"
+                [class.error]="pricingForm.get('olderBooks')?.invalid && pricingForm.get('olderBooks')?.touched">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>👤 Author Popularity Modifiers</h3>
+          <p>Price adjustments based on author recognition</p>
+          
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="famousAuthor">Famous Authors</label>
+              <input 
+                type="number" 
+                id="famousAuthor" 
+                formControlName="famousAuthor"
+                step="0.1"
+                min="0.1"
+                max="5"
+                [class.error]="pricingForm.get('famousAuthor')?.invalid && pricingForm.get('famousAuthor')?.touched">
+            </div>
+
+            <div class="form-group">
+              <label for="knownAuthor">Known Authors</label>
+              <input 
+                type="number" 
+                id="knownAuthor" 
+                formControlName="knownAuthor"
+                step="0.1"
+                min="0.1"
+                max="5"
+                [class.error]="pricingForm.get('knownAuthor')?.invalid && pricingForm.get('knownAuthor')?.touched">
+            </div>
+
+            <div class="form-group">
+              <label for="unknownAuthor">Unknown Authors</label>
+              <input 
+                type="number" 
+                id="unknownAuthor" 
+                formControlName="unknownAuthor"
+                step="0.1"
+                min="0.1"
+                max="5"
+                [class.error]="pricingForm.get('unknownAuthor')?.invalid && pricingForm.get('unknownAuthor')?.touched">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="resetToDefaults()">
+            Reset to Defaults
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="pricingForm.invalid || loading">
+            <span class="btn-icon" *ngIf="loading">⏳</span>
+            <span class="btn-icon" *ngIf="!loading">💾</span>
+            {{ loading ? 'Saving...' : 'Save Pricing Settings' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

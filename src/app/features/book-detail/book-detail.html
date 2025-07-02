@@ -1,0 +1,258 @@
+<div class="book-detail-container">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-3 text-muted">Loading book details...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !isLoading" class="error-container">
+    <div class="alert alert-danger" role="alert">
+      <div class="d-flex align-items-center">
+        <i class="fas fa-exclamation-triangle me-3 fa-2x"></i>
+        <div>
+          <h4 class="alert-heading">Book Not Found</h4>
+          <p class="mb-0">{{ error }}</p>
+        </div>
+      </div>
+      <hr>
+      <div class="d-flex justify-content-between">
+        <button class="btn btn-outline-secondary" (click)="goBack()">
+          <i class="fas fa-arrow-left me-2"></i>Go Back
+        </button>
+        <a routerLink="/" class="btn btn-primary">
+          <i class="fas fa-home me-2"></i>Back to Home
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Book Details -->
+  <div *ngIf="!isLoading && !error && (book || openLibraryBook)" class="book-detail">
+    <!-- Back Navigation -->
+    <div class="back-navigation mb-4">
+      <button class="btn btn-outline-secondary btn-sm" (click)="goBack()">
+        <i class="fas fa-arrow-left me-2"></i>Back
+      </button>
+    </div>
+
+    <div class="row">
+      <!-- Book Cover Column -->
+      <div class="col-lg-4 col-md-5 mb-4">
+        <div class="book-cover-section">
+          <div class="book-cover-container">
+            <img 
+              [src]="getCoverImage()" 
+              [alt]="(book?.title || openLibraryBook?.title || 'Book cover')"
+              class="book-cover-large"
+              (error)="onImageError($event)"
+            >
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="quick-actions mt-4">
+            <div class="price-section mb-3">
+              <div class="current-price h3 text-primary mb-1">
+                ${{ generatePrice().toFixed(2) }}
+              </div>
+              <div class="original-price text-muted text-decoration-line-through" *ngIf="generatePrice() > 0">
+                ${{ (generatePrice() * 1.2).toFixed(2) }}
+              </div>
+            </div>
+
+            <div class="action-buttons d-grid gap-2">
+              <button 
+                class="btn btn-lg" 
+                [class.btn-success]="!isInCart()"
+                [class.btn-secondary]="isInCart()"
+                [disabled]="isInCart()"
+                (click)="addToCart()"
+              >
+                <i class="fas" [class.fa-shopping-cart]="!isInCart()" [class.fa-check]="isInCart()"></i>
+                <span class="ms-2">
+                  {{ isInCart() ? 'In Cart' : 'Add to Cart' }}
+                </span>
+                <span *ngIf="getCartQuantity() > 0" class="badge bg-light text-dark ms-2">
+                  {{ getCartQuantity() }}
+                </span>
+              </button>
+
+              <a routerLink="/cart" class="btn btn-outline-primary">
+                <i class="fas fa-shopping-cart me-2"></i>View Cart
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Book Information Column -->
+      <div class="col-lg-8 col-md-7">
+        <div class="book-info-section">
+          <!-- Title and Author -->
+          <div class="book-header mb-4">
+            <h1 class="book-title">
+              {{ book?.title || openLibraryBook?.title || 'Unknown Title' }}
+            </h1>
+            <p class="book-author h5 text-muted mb-3">
+              <i class="fas fa-user me-2"></i>
+              <span *ngIf="book">{{ book.author }}</span>
+              <span *ngIf="isOpenLibraryBook">{{ getAuthorsString(openLibraryBook?.author_name) }}</span>
+            </p>
+
+            <!-- Rating -->
+            <div class="book-rating mb-3" *ngIf="getRating() > 0">
+              <div class="d-flex align-items-center">
+                <div class="stars me-3">
+                  <i *ngFor="let star of [1,2,3,4,5]" 
+                    class="fas fa-star"
+                    [class.text-warning]="star <= getRating()"
+                    [class.text-muted]="star > getRating()">
+                  </i>
+                </div>
+                <span class="rating-text">
+                  {{ getRating().toFixed(1) }}/5
+                  <span *ngIf="getRatingCount() > 0" class="text-muted">
+                    ({{ getRatingCount() }} reviews)
+                  </span>
+                </span>
+              </div>
+            </div>
+
+            <!-- Categories/Tags -->
+            <div class="book-categories mb-4" *ngIf="hasCategories()">
+              <h6 class="mb-2">Categories:</h6>
+              <div class="categories-list">
+                <span *ngFor="let category of getCategories()" 
+                      class="badge bg-light text-dark me-1">
+                  {{ category }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Book Description -->
+          <div class="book-description mb-4">
+            <h5 class="mb-3">Description</h5>
+            <div class="description-text">
+              <p>{{ getDescription() }}</p>
+            </div>
+          </div>
+
+          <!-- Book Details -->
+          <div class="book-metadata">
+            <h5 class="mb-3">Book Details</h5>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="metadata-list">
+                  <div class="metadata-item" *ngIf="getISBN() !== 'N/A'">
+                    <strong>ISBN:</strong>
+                    <span>{{ getISBN() }}</span>
+                  </div>
+                  
+                  <div class="metadata-item" *ngIf="getPublisher() !== 'N/A'">
+                    <strong>Publisher:</strong>
+                    <span>{{ getPublisher() }}</span>
+                  </div>
+
+                  <div class="metadata-item" *ngIf="getPublishedYear() !== 'N/A'">
+                    <strong>Published:</strong>
+                    <span>{{ getPublishedYear() }}</span>
+                  </div>
+
+                  <div class="metadata-item" *ngIf="getPageCount() !== 'N/A'">
+                    <strong>Pages/Editions:</strong>
+                    <span>{{ getPageCount() }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="metadata-list">
+                  <div class="metadata-item" *ngIf="hasLanguage()">
+                    <strong>Language:</strong>
+                    <span>{{ getLanguage() }}</span>
+                  </div>
+
+                  <div class="metadata-item" *ngIf="book?.format">
+                    <strong>Format:</strong>
+                    <span>{{ book!.format }}</span>
+                  </div>
+
+                  <div class="metadata-item" *ngIf="book?.stock !== undefined">
+                    <strong>Stock:</strong>
+                    <span class="badge" 
+                          [class.bg-success]="book!.stock! > 10" 
+                          [class.bg-warning]="book!.stock! <= 10 && book!.stock! > 0" 
+                          [class.bg-danger]="book!.stock! === 0">
+                      {{ book!.stock === 0 ? 'Out of Stock' : book!.stock + ' available' }}
+                    </span>
+                  </div>
+
+                  <div class="metadata-item" *ngIf="isOpenLibraryBook">
+                    <strong>Source:</strong>
+                    <span class="badge bg-info">Open Library</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Additional Info for Open Library Books -->
+          <div *ngIf="isOpenLibraryBook && openLibraryBook" class="open-library-info mt-4">
+            <div class="card">
+              <div class="card-header">
+                <h6 class="mb-0">
+                  <i class="fas fa-info-circle me-2"></i>
+                  Additional Information
+                </h6>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6" *ngIf="openLibraryBook.edition_count">
+                    <small class="text-muted">Available Editions:</small>
+                    <div>{{ openLibraryBook.edition_count }} editions</div>
+                  </div>
+                  <div class="col-md-6" *ngIf="openLibraryBook.has_fulltext">
+                    <small class="text-muted">Full Text Available:</small>
+                    <div><i class="fas fa-check text-success"></i> Yes</div>
+                  </div>
+                  <div class="col-md-6" *ngIf="openLibraryBook.want_to_read_count">
+                    <small class="text-muted">Want to Read:</small>
+                    <div>{{ openLibraryBook.want_to_read_count }} users</div>
+                  </div>
+                  <div class="col-md-6" *ngIf="openLibraryBook.currently_reading_count">
+                    <small class="text-muted">Currently Reading:</small>
+                    <div>{{ openLibraryBook.currently_reading_count }} users</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Actions (Mobile) -->
+          <div class="bottom-actions d-lg-none mt-4">
+            <div class="d-grid gap-2">
+              <button 
+                class="btn btn-lg" 
+                [class.btn-success]="!isInCart()"
+                [class.btn-secondary]="isInCart()"
+                [disabled]="isInCart()"
+                (click)="addToCart()"
+              >
+                <i class="fas" [class.fa-shopping-cart]="!isInCart()" [class.fa-check]="isInCart()"></i>
+                <span class="ms-2">
+                  {{ isInCart() ? 'In Cart' : 'Add to Cart' }}
+                </span>
+                <span *ngIf="getCartQuantity() > 0" class="badge bg-light text-dark ms-2">
+                  {{ getCartQuantity() }}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
