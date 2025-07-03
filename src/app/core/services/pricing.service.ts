@@ -63,7 +63,7 @@ export class PricingService {
   private currencies: Currency[] = [
     { code: 'USD', symbol: '$', name: 'US Dollar', rate: 1.0 },
     { code: 'EUR', symbol: '€', name: 'Euro', rate: 0.85 },
-    { code: 'TRY', symbol: '₺', name: 'Turkish Lira', rate: 27.50 }
+    { code: 'TRY', symbol: '₺', name: 'Turkish Lira', rate: 40 }
   ];
 
   private pricingConfig: PricingConfig = {

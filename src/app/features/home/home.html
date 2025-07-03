@@ -184,17 +184,27 @@
       <button class="view-more-btn" routerLink="/books">Show More →</button>
     </div>
     <div class="books-row">
-      <div *ngFor="let book of bestsellerBooks" class="book-card-small" [routerLink]="['/books', book.id]">
-        <!-- ...existing code... -->
-        <img 
-          [src]="book.coverImage" 
-          [alt]="book.title" 
-          (error)="onImageError($event)"
-          loading="lazy"
-          style="min-height: 100px; background: #f8f9fa;"
-        />
+      <div *ngFor="let book of bestsellerBooks" class="book-card-small">
+        <div class="book-cover-small">
+          <img 
+            [src]="book.coverImage" 
+            [alt]="book.title" 
+            (error)="onImageError($event)"
+            loading="lazy"
+            style="min-height: 100px; background: #f8f9fa;"
+          />
+          <div class="book-overlay-small">
+            <button 
+              class="quick-view-btn-small"
+              (click)="quickViewBook(book, $event)"
+              title="Quick view"
+            >
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
         <div class="book-details">
-          <h4>{{ book.title }}</h4>
+          <h4 (click)="quickViewBook(book, $event)" class="clickable-title">{{ book.title }}</h4>
           <p>{{ book.author }}</p>
           <div class="rating-price">
             <div class="stars">
@@ -307,3 +317,103 @@
     </div>
   </div>
 </section>
+
+<!-- Quick View Modal -->
+<div *ngIf="showModal" class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()" *ngIf="selectedBook">
+    <div class="modal-header">
+      <h3>Quick View</h3>
+      <button class="close-btn" (click)="closeModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="row">
+        <!-- Book Cover -->
+        <div class="col-md-5">
+          <div class="modal-book-cover">
+            <img 
+              [src]="selectedBook.coverImage" 
+              [alt]="selectedBook.title"
+              (error)="onImageError($event)"
+              class="book-cover-modal"
+            />
+            <div class="book-badges">
+              <span *ngIf="selectedBook.isFeatured" class="badge featured">Featured</span>
+              <span *ngIf="selectedBook.isBestseller" class="badge bestseller">Bestseller</span>
+              <span *ngIf="selectedBook.isNew" class="badge new">New</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Book Details -->
+        <div class="col-md-7">
+          <div class="modal-book-info">
+            <h2 class="book-title">{{ selectedBook.title }}</h2>
+            <p class="book-author">by {{ selectedBook.author }}</p>
+            <p class="book-category">
+              <i class="fas fa-tag"></i> {{ selectedBook.category }}
+            </p>
+            
+            <div class="book-rating" *ngIf="selectedBook.rating > 0">
+              <div class="stars">
+                <span *ngFor="let star of getRatingStars(selectedBook.rating)" 
+                      class="star" 
+                      [class.full]="star === 'full'"
+                      [class.half]="star === 'half'"
+                      [class.empty]="star === 'empty'">★</span>
+              </div>
+              <span class="rating-text">{{ selectedBook.rating }} ({{ selectedBook.reviewCount }} reviews)</span>
+            </div>
+            
+            <div class="book-price">
+              <span class="current-price">{{ selectedBook.price | priceFormat }}</span>
+              <span *ngIf="selectedBook.originalPrice && selectedBook.originalPrice > selectedBook.price" 
+                    class="original-price">{{ selectedBook.originalPrice | priceFormat }}</span>
+            </div>
+            
+            <div class="book-description">
+              <p>{{ selectedBook.description }}</p>
+            </div>
+            
+            <div class="book-meta">
+              <div class="meta-item">
+                <strong>Published:</strong> {{ selectedBook.publishedDate }}
+              </div>
+              <div class="meta-item">
+                <strong>Pages:</strong> {{ selectedBook.pageCount }}
+              </div>
+              <div class="meta-item">
+                <strong>Language:</strong> {{ selectedBook.language }}
+              </div>
+              <div class="meta-item" *ngIf="selectedBook.publisher">
+                <strong>Publisher:</strong> {{ selectedBook.publisher }}
+              </div>
+            </div>
+            
+            <div class="modal-actions">
+              <button 
+                class="btn btn-primary btn-large"
+                (click)="addToCart(selectedBook, $event)"
+                [disabled]="selectedBook.id && isInCart(selectedBook.id)"
+                [class.btn-success]="selectedBook.id && isInCart(selectedBook.id)"
+              >
+                <i class="fas" [class.fa-shopping-cart]="!selectedBook.id || !isInCart(selectedBook.id)" [class.fa-check]="selectedBook.id && isInCart(selectedBook.id)"></i>
+                {{ (selectedBook.id && isInCart(selectedBook.id)) ? 'In Cart' : 'Add to Cart' }}
+              </button>
+              
+              <button 
+                class="btn btn-outline-primary btn-large"
+                (click)="viewFullDetails(selectedBook)"
+              >
+                <i class="fas fa-external-link-alt"></i>
+                View Full Details
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

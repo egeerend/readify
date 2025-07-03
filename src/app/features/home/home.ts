@@ -1,36 +1,40 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { BookService, Book } from '../../core/services/book.service';
 import { CategoryService, BookCategory } from '../../core/services/category.service';
 import { CartService } from '../../core/services/cart.service';
+import { SharedModule } from '../../shared/shared-module';
 import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterModule, PriceFormatPipe],
+  imports: [CommonModule, RouterModule, SharedModule, PriceFormatPipe],
   templateUrl: './home.html',
   styleUrls: ['./home.scss']
 })
 export class HomeComponent implements OnInit {
-  
+  private readonly bookService = inject(BookService);
+  private readonly categoryService = inject(CategoryService);
+  private readonly cartService = inject(CartService);
+  private readonly router = inject(Router);
+
   featuredBooks: Book[] = [];
   bestsellerBooks: Book[] = [];
   newArrivals: Book[] = [];
   categories: BookCategory[] = [];
-  isLoading = true;
+  isLoading = false;
+  
+  // Modal state
+  showModal = false;
+  selectedBook: Book | null = null;
 
   // Category carousel properties
   categoryScrollPosition = 0;
   categoryScrollStep = 300;
 
-  constructor(
-    private bookService: BookService,
-    private categoryService: CategoryService,
-    private router: Router,
-    private cartService: CartService
-  ) {}
+  constructor() {}
 
   async ngOnInit() {
     this.categories = this.categoryService.getHomePageCategories();
@@ -198,7 +202,41 @@ export class HomeComponent implements OnInit {
       event.preventDefault();
       event.stopPropagation();
     }
-    this.router.navigate(['/books', book.id]);
+    
+    // Show quick view modal instead of navigating
+    this.selectedBook = book;
+    this.showModal = true;
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+  }
+
+  // Close modal
+  closeModal(): void {
+    this.showModal = false;
+    this.selectedBook = null;
+    document.body.style.overflow = 'auto'; // Restore scrolling
+  }
+
+  // Navigate to full book detail page
+  viewFullDetails(book: Book): void {
+    this.closeModal();
+    
+    // Handle different book ID types for proper routing
+    if (book.id && (book.id.startsWith('OL') || book.id.includes('/works/'))) {
+      // For Open Library books, generate the proper book ID and use query params
+      const title = book.title?.replace(/[^a-zA-Z0-9]/g, '').toLowerCase().slice(0, 20) || 'unknown';
+      const author = book.author?.replace(/[^a-zA-Z0-9]/g, '').toLowerCase().slice(0, 15) || 'unknown';
+      const bookId = `ol-${title}-${author}`;
+      
+      this.router.navigate(['/books', bookId], { 
+        queryParams: { 
+          title: book.title || 'unknown',
+          author: book.author || 'unknown'
+        }
+      });
+    } else {
+      // For catalog books, use the standard books route
+      this.router.navigate(['/books', book.id]);
+    }
   }
 
   // Check if book is in cart

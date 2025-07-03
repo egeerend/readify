@@ -21,7 +21,12 @@ export class PriceFormatPipe implements PipeTransform, OnDestroy {
     this.subscription?.unsubscribe();
   }
 
-  transform(priceInUSD: number): string {
+  transform(priceInUSD: number | null | undefined): string {
+    // Handle missing or invalid price values
+    if (priceInUSD === null || priceInUSD === undefined || isNaN(priceInUSD)) {
+      return 'Price not available';
+    }
+
     if (!this.currentCurrency) {
       return `$${priceInUSD.toFixed(2)}`;
     }

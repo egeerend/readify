@@ -1,7 +1,14 @@
 <div class="open-library-search">
   <div class="search-header">
-    <h2 class="mb-4">Open Library Search & Import</h2>
-    <p class="text-muted">Search and import books from Open Library API</p>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h2 class="mb-1">Open Library Search & Import</h2>
+        <p class="text-muted mb-0">Search and import books from Open Library API</p>
+      </div>
+      <div class="currency-selector-wrapper">
+        <app-currency-selector></app-currency-selector>
+      </div>
+    </div>
   </div>
 
   <!-- Search Form -->
@@ -24,6 +31,7 @@
             id="searchQuery"
             class="form-control" 
             [(ngModel)]="searchQuery"
+            (input)="onSearchInput()"
             placeholder="Enter your search query..."
             (keyup.enter)="searchBooks()"
           >
@@ -133,8 +141,8 @@
 
                   <!-- Price Display -->
                   <div class="book-price mb-3">
-                    <span class="price-current h5 text-primary me-2">${{ generatePrice(book).toFixed(2) }}</span>
-                    <span class="price-original text-muted text-decoration-line-through">${{ (generatePrice(book) * 1.2).toFixed(2) }}</span>
+                    <span class="price-current h5 text-primary me-2">{{ getCurrentCurrencySymbol() }}{{ generatePrice(book).toFixed(2) }}</span>
+                    <span class="price-original text-muted text-decoration-line-through">{{ getCurrentCurrencySymbol() }}{{ (generatePrice(book) * 1.2).toFixed(2) }}</span>
                   </div>
                 </div>
                 

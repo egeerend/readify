@@ -180,6 +180,193 @@
   }
 }
 
+// Password Reset Styles
+.forgot-password {
+  text-align: center;
+  margin: 1rem 0;
+
+  .forgot-btn {
+    background: none;
+    border: none;
+    color: #007bff;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: rgba(0, 123, 255, 0.1);
+      text-decoration: none;
+    }
+
+    &:focus {
+      outline: 2px solid #007bff;
+      outline-offset: 2px;
+    }
+  }
+}
+
+// Modal Styles
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+  animation: fadeIn 0.3s ease;
+
+  .modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 420px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.3s ease;
+    position: relative;
+
+    h3 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    form {
+      background: none;
+      padding: 0;
+      box-shadow: none;
+      backdrop-filter: none;
+
+      &:hover {
+        transform: none;
+        box-shadow: none;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #555;
+        font-weight: 500;
+      }
+
+      input[type="email"] {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e1e5e9;
+        border-radius: 8px;
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+        transition: border-color 0.3s ease;
+
+        &:focus {
+          outline: none;
+          border-color: #007bff;
+          box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+      }
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+
+      button {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+
+        &[type="submit"] {
+          background: #007bff;
+          color: white;
+
+          &:hover:not(:disabled) {
+            background: #0056b3;
+            transform: translateY(-1px);
+          }
+
+          &:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+          }
+        }
+
+        &[type="button"] {
+          background: #6c757d;
+          color: white;
+
+          &:hover {
+            background: #545b62;
+            transform: translateY(-1px);
+          }
+        }
+
+        .loading-spinner {
+          font-size: 0.9rem;
+        }
+      }
+    }
+
+    // Success/Error messages in modal
+    .success-message, .error-message {
+      margin-bottom: 1rem;
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+  }
+}
+
+// Animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 // Responsive design
 @media (max-width: 768px) {
   .login-container {
@@ -212,29 +399,26 @@
       font-size: 1.8rem;
     }
   }
-}
 
-// Animation for form entrance
-.login-container form {
-  animation: slideInUp 0.6s ease-out;
-}
+  .modal-overlay {
+    padding: 1rem;
 
-@keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+    .modal-content {
+      padding: 1.5rem;
+      max-width: 100%;
 
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
+      h3 {
+        font-size: 1.3rem;
+      }
+
+      .modal-buttons {
+        flex-direction: column;
+        gap: 0.75rem;
+
+        button {
+          width: 100%;
+        }
+      }
+    }
   }
 }

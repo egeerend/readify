@@ -54,11 +54,40 @@
           <!-- Quick Actions -->
           <div class="quick-actions mt-4">
             <div class="price-section mb-3">
-              <div class="current-price h3 text-primary mb-1">
-                ${{ generatePrice().toFixed(2) }}
+              <div class="price-display" *ngIf="!isEditingPrice">
+                <div class="current-price h3 text-primary mb-1">
+                  ${{ getCurrentPrice().toFixed(2) }}
+                </div>
+                <div class="original-price text-muted text-decoration-line-through" *ngIf="getCurrentPrice() > 0">
+                  ${{ (getCurrentPrice() * 1.2).toFixed(2) }}
+                </div>
+                <button class="btn btn-outline-secondary btn-sm mt-2" (click)="startEditingPrice()">
+                  <i class="fas fa-edit"></i> Edit Price
+                </button>
               </div>
-              <div class="original-price text-muted text-decoration-line-through" *ngIf="generatePrice() > 0">
-                ${{ (generatePrice() * 1.2).toFixed(2) }}
+              
+              <div class="price-edit" *ngIf="isEditingPrice">
+                <div class="input-group mb-2">
+                  <span class="input-group-text">$</span>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    [(ngModel)]="editablePrice"
+                    (input)="onPriceInputChange($event)"
+                    min="0.01" 
+                    max="999.99" 
+                    step="0.01"
+                    placeholder="Enter price"
+                  >
+                </div>
+                <div class="btn-group w-100">
+                  <button class="btn btn-success" (click)="savePrice()">
+                    <i class="fas fa-save"></i> Save
+                  </button>
+                  <button class="btn btn-secondary" (click)="cancelEditingPrice()">
+                    <i class="fas fa-times"></i> Cancel
+                  </button>
+                </div>
               </div>
             </div>
 

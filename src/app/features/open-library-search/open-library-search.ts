@@ -2,14 +2,18 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter } from 'rxjs/operators';
 import { OpenLibraryService, OpenLibraryBook } from '../../core/services/open-library.service';
 import { BookService, Book } from '../../core/services/book.service';
 import { CartService } from '../../core/services/cart.service';
+import { PricingService } from '../../core/services/pricing.service';
+import { CurrencySelectorComponent } from '../../shared/currency-selector/currency-selector';
 
 @Component({
   selector: 'app-open-library-search',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CurrencySelectorComponent],
   templateUrl: './open-library-search.html',
   styleUrls: ['./open-library-search.scss']
 })
@@ -20,16 +24,31 @@ export class OpenLibrarySearchComponent implements OnInit {
   isLoading: boolean = false;
   error: string = '';
   importingBooks: Set<string> = new Set();
+  hasSearched: boolean = false; // Track if user has actually searched
+  private searchSubject = new Subject<string>(); // For debouncing
 
   constructor(
     private openLibraryService: OpenLibraryService,
     private bookService: BookService,
     private cartService: CartService,
+    private pricingService: PricingService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
 
   ngOnInit(): void {
+    // Set up debounced search
+    this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      filter(term => term.length >= 2)
+    ).subscribe(searchTerm => {
+      // Only auto-search if user hasn't manually searched yet
+      if (!this.hasSearched) {
+        this.performSearch();
+      }
+    });
+
     // Check for query parameters from category navigation
     this.route.queryParams.subscribe(params => {
       if (params['query'] && params['type']) {
@@ -42,9 +61,27 @@ export class OpenLibrarySearchComponent implements OnInit {
   }
 
   /**
-   * Search books based on the selected criteria
+   * Handle search input changes (for debouncing)
+   */
+  onSearchInput(): void {
+    this.error = ''; // Clear error while typing
+    if (this.searchQuery.trim()) {
+      this.searchSubject.next(this.searchQuery);
+    }
+  }
+
+  /**
+   * Search books based on the selected criteria (called by button click)
    */
   searchBooks(): void {
+    this.hasSearched = true; // Mark that user has manually searched
+    this.performSearch();
+  }
+
+  /**
+   * Perform the actual search operation
+   */
+  private performSearch(): void {
     if (!this.searchQuery.trim()) {
       this.error = 'Please enter a search query';
       return;
@@ -74,7 +111,8 @@ export class OpenLibrarySearchComponent implements OnInit {
       next: (response) => {
         this.searchResults = response.docs || [];
         this.isLoading = false;
-        if (this.searchResults.length === 0) {
+        // Only show "no results" if user has actually searched (not just typing)
+        if (this.searchResults.length === 0 && this.hasSearched) {
           this.error = 'No books found for your search query';
         }
       },
@@ -201,7 +239,7 @@ export class OpenLibrarySearchComponent implements OnInit {
     return this.cartService.getBookQuantity(bookId);
   }
 
-  // Generate random price for Open Library books
+  // Generate random price for Open Library books with currency conversion
   generatePrice(book: OpenLibraryBook): number {
     // Generate a price based on book properties for consistency
     const basePrice = 10;
@@ -209,11 +247,19 @@ export class OpenLibrarySearchComponent implements OnInit {
     const yearFactor = book.first_publish_year ? (2024 - book.first_publish_year) * 0.1 : 1;
     const editionFactor = book.edition_count ? Math.min(book.edition_count * 0.5, 5) : 1;
     
-    let price = basePrice + (titleLength * 0.2) + yearFactor + editionFactor;
+    let priceInUSD = basePrice + (titleLength * 0.2) + yearFactor + editionFactor;
     
     // Round to 2 decimal places and ensure reasonable range
-    price = Math.round(price * 100) / 100;
-    return Math.max(5.99, Math.min(price, 49.99));
+    priceInUSD = Math.round(priceInUSD * 100) / 100;
+    priceInUSD = Math.max(5.99, Math.min(priceInUSD, 49.99));
+    
+    // Convert to current currency using PricingService
+    return this.pricingService.convertPrice(priceInUSD);
+  }
+
+  // Get current currency symbol for display
+  getCurrentCurrencySymbol(): string {
+    return this.pricingService.getCurrentCurrency().symbol;
   }
 
   // Convert OpenLibraryBook to Book

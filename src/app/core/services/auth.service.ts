@@ -4,7 +4,8 @@ import {
   createUserWithEmailAndPassword, 
   signOut, 
   User,
-  updateProfile
+  updateProfile,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { 
   doc, 
@@ -214,6 +215,15 @@ export class AuthService {
     }
   }
 
+  // Send password reset email
+  async sendPasswordReset(email: string): Promise<void> {
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (error: any) {
+      throw new Error(this.getErrorMessage(error.code));
+    }
+  }
+
   // Error message helper
   private getErrorMessage(errorCode: string): string {
     switch (errorCode) {
@@ -231,6 +241,15 @@ export class AuthService {
         return 'Too many failed attempts. Please try again later.';
       default:
         return 'An error occurred. Please try again.';
+    }
+  }
+
+  // Password reset method
+  async sendPasswordResetEmail(email: string): Promise<void> {
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (error: any) {
+      throw error; // Let the component handle the specific error
     }
   }
 }

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { BookService, Book } from '../../core/services/book.service';
 import { OpenLibraryService, OpenLibraryBook } from '../../core/services/open-library.service';
@@ -8,7 +9,7 @@ import { CartService } from '../../core/services/cart.service';
 @Component({
   selector: 'app-book-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './book-detail.html',
   styleUrls: ['./book-detail.scss']
 })
@@ -19,6 +20,13 @@ export class BookDetailComponent implements OnInit {
   error = '';
   isOpenLibraryBook = false;
   bookId = '';
+  originalTitle = '';
+  originalAuthor = '';
+  
+  // Price editing functionality
+  isEditingPrice = false;
+  editablePrice: number = 0;
+  currentPrice: number = 0;
 
   constructor(
     private route: ActivatedRoute,
@@ -29,9 +37,19 @@ export class BookDetailComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
+    // Combine both route params and query params handling
     this.route.params.subscribe(async params => {
       this.bookId = params['id'];
-      await this.loadBookDetails();
+      
+      // Check if we also have query parameters for the original search terms
+      this.route.queryParams.subscribe(async queryParams => {
+        if (queryParams['title'] && queryParams['author']) {
+          // Store the original search terms for Open Library search
+          this.originalTitle = queryParams['title'];
+          this.originalAuthor = queryParams['author'];
+        }
+        await this.loadBookDetails();
+      });
     });
   }
 
@@ -48,6 +66,10 @@ export class BookDetailComponent implements OnInit {
         this.isOpenLibraryBook = false;
         await this.loadLocalBook();
       }
+      
+      // Initialize current price after loading book
+      this.currentPrice = this.generatePrice();
+      this.editablePrice = this.currentPrice;
     } catch (error) {
       console.error('Error loading book details:', error);
       this.error = 'Failed to load book details';
@@ -72,29 +94,46 @@ export class BookDetailComponent implements OnInit {
   }
 
   async loadOpenLibraryBook() {
-    // For Open Library books, we need to reconstruct the book data
-    // This is a simplified approach - in a real app, you might want to cache this data
     try {
-      // Extract search terms from the generated ID
-      const parts = this.bookId.replace('ol-', '').split('-');
-      const title = parts[0];
-      const author = parts[1];
+      // Use original search terms if available, otherwise extract from bookId
+      let searchTitle = this.originalTitle;
+      let searchAuthor = this.originalAuthor;
       
-      if (title && title !== 'unknown') {
+      if (!searchTitle) {
+        // Fallback: extract from bookId (less reliable)
+        const parts = this.bookId.replace('ol-', '').split('-');
+        searchTitle = parts[0];
+        searchAuthor = parts[1];
+      }
+      
+      if (searchTitle && searchTitle !== 'unknown') {
+        console.log('Searching for:', searchTitle, 'by', searchAuthor);
+        
         // Search for the book to get full details
-        const searchResults = await this.openLibraryService.searchBooks(title).toPromise();
+        const searchResults = await this.openLibraryService.searchBooks(searchTitle).toPromise();
+        console.log('Search results:', searchResults);
+        
         if (searchResults && searchResults.docs && searchResults.docs.length > 0) {
-          // Find the best match
-          const matchedBook = searchResults.docs.find(book => 
-            this.generateBookId(book) === this.bookId
-          ) || searchResults.docs[0];
+          // Find the best match by title and author
+          let matchedBook = searchResults.docs.find(book => {
+            const titleMatch = book.title?.toLowerCase().includes(searchTitle.toLowerCase());
+            const authorMatch = searchAuthor && searchAuthor !== 'unknown' ? 
+              book.author_name?.some(author => author.toLowerCase().includes(searchAuthor.toLowerCase())) : true;
+            return titleMatch && authorMatch;
+          });
+          
+          // If no exact match, use the first result
+          if (!matchedBook) {
+            matchedBook = searchResults.docs[0];
+          }
           
           this.openLibraryBook = matchedBook;
+          console.log('Found book:', this.openLibraryBook);
         } else {
           this.error = 'Book not found in Open Library';
         }
       } else {
-        this.error = 'Invalid book ID';
+        this.error = 'Invalid book search terms';
       }
     } catch (error) {
       console.error('Error loading Open Library book:', error);
@@ -314,5 +353,41 @@ export class BookDetailComponent implements OnInit {
       return this.openLibraryBook.language[0];
     }
     return 'English';
+  }
+
+  // Price editing methods
+  getCurrentPrice(): number {
+    return this.isEditingPrice ? this.editablePrice : this.currentPrice;
+  }
+
+  startEditingPrice(): void {
+    this.isEditingPrice = true;
+    this.editablePrice = this.currentPrice;
+  }
+
+  cancelEditingPrice(): void {
+    this.isEditingPrice = false;
+    this.editablePrice = this.currentPrice;
+  }
+
+  savePrice(): void {
+    if (this.editablePrice >= 0.01 && this.editablePrice <= 999.99) {
+      this.currentPrice = this.editablePrice;
+      this.isEditingPrice = false;
+      
+      // If it's a local book, update the book service
+      if (this.book && !this.isOpenLibraryBook) {
+        this.book.price = this.currentPrice;
+        this.bookService.updateBook(this.book);
+      }
+    }
+  }
+
+  onPriceInputChange(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const value = parseFloat(target.value);
+    if (!isNaN(value)) {
+      this.editablePrice = value;
+    }
   }
 }

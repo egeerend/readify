@@ -20,6 +20,13 @@ export class LoginComponent {
   isLoading = false;
   errorMessage = '';
   successMessage = '';
+  
+  // Password reset properties
+  showPasswordResetModal = false;
+  resetEmail = '';
+  resetLoading = false;
+  resetSuccessMessage = '';
+  resetErrorMessage = '';
 
   constructor(
     private authService: AuthService,
@@ -65,5 +72,59 @@ export class LoginComponent {
     this.password = '';
     this.firstName = '';
     this.lastName = '';
+  }
+
+  // Password reset methods
+  openPasswordResetModal() {
+    this.showPasswordResetModal = true;
+    this.resetEmail = this.email; // Pre-fill with current email if available
+    this.resetSuccessMessage = '';
+    this.resetErrorMessage = '';
+  }
+
+  closePasswordResetModal() {
+    this.showPasswordResetModal = false;
+    this.resetEmail = '';
+    this.resetLoading = false;
+    this.resetSuccessMessage = '';
+    this.resetErrorMessage = '';
+  }
+
+  async sendPasswordReset() {
+    if (!this.resetEmail) {
+      this.resetErrorMessage = 'Lütfen e-posta adresinizi girin.';
+      return;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(this.resetEmail)) {
+      this.resetErrorMessage = 'Geçerli bir e-posta adresi girin.';
+      return;
+    }
+
+    this.resetLoading = true;
+    this.resetErrorMessage = '';
+    this.resetSuccessMessage = '';
+
+    try {
+      await this.authService.sendPasswordResetEmail(this.resetEmail);
+      this.resetSuccessMessage = 'Şifre sıfırlama e-postası gönderildi! E-posta kutunuzu kontrol edin.';
+      
+      // Auto-close modal after 3 seconds
+      setTimeout(() => {
+        this.closePasswordResetModal();
+      }, 3000);
+    } catch (error: any) {
+      if (error.code === 'auth/user-not-found') {
+        this.resetErrorMessage = 'Bu e-posta adresi ile kayıtlı bir hesap bulunamadı.';
+      } else if (error.code === 'auth/invalid-email') {
+        this.resetErrorMessage = 'Geçersiz e-posta adresi.';
+      } else {
+        this.resetErrorMessage = 'E-posta gönderilirken hata oluştu: ' + error.message;
+      }
+    } finally {
+      this.resetLoading = false;
+    }
   }
 }

@@ -71,6 +71,13 @@
       {{ isLoading ? 'İşlem yapılıyor...' : (isRegistering ? 'Hesap Oluştur' : 'Giriş Yap') }}
     </button>
 
+    <!-- Forgot Password Link -->
+    <div class="forgot-password" *ngIf="!isRegistering">
+      <button type="button" class="forgot-btn" (click)="openPasswordResetModal()">
+      Şifremi Unuttum?
+      </button>
+    </div>
+
     <!-- Toggle Mode -->
     <div class="form-footer">
       <p>
@@ -81,4 +88,43 @@
       </p>
     </div>
   </form>
+</div>
+
+<!-- Password Reset Modal -->
+<div class="modal-overlay" *ngIf="showPasswordResetModal" (click)="closePasswordResetModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <h3>Şifre Sıfırlama</h3>
+    
+    <!-- Reset Success Message -->
+    <div *ngIf="resetSuccessMessage" class="success-message">
+      <span class="success-icon">✅</span>
+      {{ resetSuccessMessage }}
+    </div>
+    
+    <!-- Reset Error Message -->
+    <div *ngIf="resetErrorMessage" class="error-message">
+      <span class="error-icon">⚠️</span>
+      {{ resetErrorMessage }}
+    </div>
+    
+    <form (ngSubmit)="sendPasswordReset()" #resetForm="ngForm">
+      <label for="resetEmail">E-posta Adresiniz</label>
+      <input 
+        type="email" 
+        id="resetEmail" 
+        [(ngModel)]="resetEmail" 
+        name="resetEmail" 
+        placeholder="E-posta adresinizi girin"
+        required
+      >
+      
+      <div class="modal-buttons">
+        <button type="submit" [disabled]="resetLoading || !resetEmail">
+          <span *ngIf="resetLoading" class="loading-spinner">⏳</span>
+          {{ resetLoading ? 'Gönderiliyor...' : 'Sıfırlama E-postası Gönder' }}
+        </button>
+        <button type="button" (click)="closePasswordResetModal()">İptal</button>
+      </div>
+    </form>
+  </div>
 </div>
