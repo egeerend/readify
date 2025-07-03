@@ -2,19 +2,24 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CartService, CartItem } from '../../core/services/cart.service';
+import { PricingService } from '../../core/services/pricing.service';
+import { CurrencySelectorComponent } from '../../shared/currency-selector/currency-selector';
 import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-cart',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, CurrencySelectorComponent],
   templateUrl: './cart.html',
   styleUrls: ['./cart.scss']
 })
 export class CartComponent implements OnInit {
   cartItems$: Observable<CartItem[]>;
   
-  constructor(private cartService: CartService) {
+  constructor(
+    private cartService: CartService,
+    private pricingService: PricingService
+  ) {
     this.cartItems$ = this.cartService.cart$;
   }
 
@@ -49,9 +54,6 @@ export class CartComponent implements OnInit {
 
   // Format price for display
   formatPrice(price: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(price);
+    return this.pricingService.formatPrice(price);
   }
 }

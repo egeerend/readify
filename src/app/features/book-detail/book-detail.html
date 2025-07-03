@@ -31,11 +31,14 @@
 
   <!-- Book Details -->
   <div *ngIf="!isLoading && !error && (book || openLibraryBook)" class="book-detail">
-    <!-- Back Navigation -->
-    <div class="back-navigation mb-4">
+    <!-- Back Navigation and Currency Selector -->
+    <div class="back-navigation mb-4 d-flex justify-content-between align-items-center">
       <button class="btn btn-outline-secondary btn-sm" (click)="goBack()">
         <i class="fas fa-arrow-left me-2"></i>Back
       </button>
+      <div class="currency-selector-wrapper">
+        <app-currency-selector></app-currency-selector>
+      </div>
     </div>
 
     <div class="row">

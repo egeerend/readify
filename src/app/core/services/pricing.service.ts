@@ -63,7 +63,9 @@ export class PricingService {
   private currencies: Currency[] = [
     { code: 'USD', symbol: '$', name: 'US Dollar', rate: 1.0 },
     { code: 'EUR', symbol: '€', name: 'Euro', rate: 0.85 },
-    { code: 'TRY', symbol: '₺', name: 'Turkish Lira', rate: 40 }
+    { code: 'GBP', symbol: '£', name: 'British Pound', rate: 0.75 },
+    { code: 'JPY', symbol: '¥', name: 'Japanese Yen', rate: 110 },
+    { code: 'TRY', symbol: '₺', name: 'Turkish Lira', rate: 27 }
   ];
 
   private pricingConfig: PricingConfig = {
@@ -197,6 +199,12 @@ export class PricingService {
   convertPrice(usdPrice: number): number {
     const currentCurrency = this.currentCurrency.value;
     const convertedPrice = usdPrice * currentCurrency.rate;
+    
+    // Handle JPY which typically doesn't use decimal places
+    if (currentCurrency.code === 'JPY') {
+      return Math.round(convertedPrice);
+    }
+    
     return Math.round(convertedPrice * 100) / 100;
   }
 
@@ -213,6 +221,11 @@ export class PricingService {
         return `${convertedPrice.toFixed(2)}${currentCurrency.symbol}`;
       case 'TRY':
         return `${convertedPrice.toFixed(2)} ${currentCurrency.symbol}`;
+      case 'JPY':
+        // Japanese Yen typically doesn't use decimal places
+        return `${currentCurrency.symbol}${Math.round(convertedPrice).toLocaleString()}`;
+      case 'GBP':
+      case 'USD':
       default:
         return `${currentCurrency.symbol}${convertedPrice.toFixed(2)}`;
     }

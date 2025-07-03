@@ -5,11 +5,13 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { BookService, Book } from '../../core/services/book.service';
 import { OpenLibraryService, OpenLibraryBook } from '../../core/services/open-library.service';
 import { CartService } from '../../core/services/cart.service';
+import { CurrencySelectorComponent } from '../../shared/currency-selector/currency-selector';
+import { PriceFormatPipe } from '../../shared/pipes/price-format.pipe';
 
 @Component({
   selector: 'app-book-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, CurrencySelectorComponent, PriceFormatPipe],
   templateUrl: './book-detail.html',
   styleUrls: ['./book-detail.scss']
 })
