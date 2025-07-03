@@ -40,8 +40,8 @@ export class BookDetailComponent implements OnInit {
     this.error = '';
 
     try {
-      // Check if it's an Open Library book (starts with 'OL' and ends with 'W' for works, or 'ol-')
-      if (this.bookId.startsWith('ol-') || this.bookId.match(/^OL\d+[WMA]$/)) {
+      // Check if it's an Open Library book (starts with 'ol-')
+      if (this.bookId.startsWith('ol-')) {
         this.isOpenLibraryBook = true;
         await this.loadOpenLibraryBook();
       } else {
@@ -72,38 +72,29 @@ export class BookDetailComponent implements OnInit {
   }
 
   async loadOpenLibraryBook() {
+    // For Open Library books, we need to reconstruct the book data
+    // This is a simplified approach - in a real app, you might want to cache this data
     try {
-      // Check if it's a proper Open Library work ID (like OL123456W)
-      if (this.bookId.match(/^OL\d+[WMA]$/)) {
-        // Get book details directly by ID from Open Library
-        const bookData = await this.openLibraryService.getBookById(this.bookId).toPromise();
-        if (bookData) {
-          this.openLibraryBook = bookData;
+      // Extract search terms from the generated ID
+      const parts = this.bookId.replace('ol-', '').split('-');
+      const title = parts[0];
+      const author = parts[1];
+      
+      if (title && title !== 'unknown') {
+        // Search for the book to get full details
+        const searchResults = await this.openLibraryService.searchBooks(title).toPromise();
+        if (searchResults && searchResults.docs && searchResults.docs.length > 0) {
+          // Find the best match
+          const matchedBook = searchResults.docs.find(book => 
+            this.generateBookId(book) === this.bookId
+          ) || searchResults.docs[0];
+          
+          this.openLibraryBook = matchedBook;
         } else {
           this.error = 'Book not found in Open Library';
         }
       } else {
-        // Handle legacy 'ol-' prefixed IDs
-        const parts = this.bookId.replace('ol-', '').split('-');
-        const title = parts[0];
-        const author = parts[1];
-        
-        if (title && title !== 'unknown') {
-          // Search for the book to get full details
-          const searchResults = await this.openLibraryService.searchBooks(title).toPromise();
-          if (searchResults && searchResults.docs && searchResults.docs.length > 0) {
-            // Find the best match
-            const matchedBook = searchResults.docs.find(book => 
-              this.generateBookId(book) === this.bookId
-            ) || searchResults.docs[0];
-            
-            this.openLibraryBook = matchedBook;
-          } else {
-            this.error = 'Book not found in Open Library';
-          }
-        } else {
-          this.error = 'Invalid book ID';
-        }
+        this.error = 'Invalid book ID';
       }
     } catch (error) {
       console.error('Error loading Open Library book:', error);
@@ -111,10 +102,10 @@ export class BookDetailComponent implements OnInit {
     }
   }
 
-  // Generate book ID for Open Library books (same as in open-library service)
+  // Generate book ID for Open Library books (same as in search component)
   generateBookId(book: OpenLibraryBook): string {
     if (book.key) {
-      return book.key.replace('/works/', ''); // This should match what open-library.service generates
+      return book.key.replace('/works/', 'ol-work-');
     }
     const title = book.title?.replace(/[^a-zA-Z0-9]/g, '').toLowerCase().slice(0, 20) || 'unknown';
     const author = book.author_name?.[0]?.replace(/[^a-zA-Z0-9]/g, '').toLowerCase().slice(0, 15) || 'unknown';

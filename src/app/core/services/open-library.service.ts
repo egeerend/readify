@@ -295,44 +295,4 @@ export class OpenLibraryService {
   convertSearchResponseToBooks(response: OpenLibrarySearchResponse): Book[] {
     return response.docs.map(book => this.convertToBook(book));
   }
-
-  /**
-   * Get a specific book by its Open Library ID
-   * @param id Open Library work ID (e.g., "OL123456W")
-   * @returns Observable of book details
-   */
-  getBookById(id: string): Observable<OpenLibraryBook | null> {
-    const workUrl = `${this.baseUrl}/works/${id}.json`;
-    
-    return this.http.get<any>(workUrl).pipe(
-      map(work => {
-        if (!work) return null;
-        
-        // Convert work to OpenLibraryBook format
-        const book: OpenLibraryBook = {
-          key: work.key,
-          title: work.title,
-          author_name: work.authors?.map((author: any) => author.name || 'Unknown Author') || ['Unknown Author'],
-          first_publish_year: work.first_publish_date ? parseInt(work.first_publish_date.substring(0, 4)) : undefined,
-          subject: work.subjects?.slice(0, 10) || [],
-          publisher: work.publishers || [],
-          isbn: work.isbn_13 || work.isbn_10 || [],
-          cover_i: work.covers?.[0],
-          ratings_average: 0, // Work endpoint doesn't provide ratings
-          ratings_count: 0,
-          has_fulltext: false,
-          ebook_access: 'no',
-          publish_date: work.first_publish_date ? [work.first_publish_date] : [],
-          language: work.languages?.map((lang: any) => lang.key?.replace('/languages/', '') || 'en') || ['en'],
-          edition_count: work.edition_count || 1
-        };
-        
-        return book;
-      }),
-      catchError(error => {
-        console.error('Error fetching book by ID:', error);
-        return of(null);
-      })
-    );
-  }
 }
