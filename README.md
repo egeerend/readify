@@ -229,12 +229,70 @@ try {
 
 ## 🚀 Deployment
 
+### Complete GitHub Pages Deployment Guide
+
+#### Step 1: Prepare Your Repository
+```bash
+# 1. Create a new GitHub repository (if not already created)
+# Go to GitHub.com → New Repository → Name it "readify"
+
+# 2. Initialize git and connect to GitHub
+git init
+git add .
+git commit -m "Initial commit"
+git branch -M main
+git remote add origin https://github.com/YOUR_USERNAME/readify.git
+git push -u origin main
+```
+
+#### Step 2: Install GitHub Pages Deployment Tool
+```bash
+# Install angular-cli-ghpages globally
+npm install -g angular-cli-ghpages
+```
+
+#### Step 3: Build and Deploy
+```bash
+# Build for production with correct base href (IMPORTANT!)
+ng build --configuration production --base-href /readify/
+
+# Deploy to GitHub Pages
+npx angular-cli-ghpages --dir=dist/readify/browser
+```
+
+#### Step 4: Enable GitHub Pages
+1. Go to your repository on GitHub
+2. Click **Settings** tab
+3. Scroll down to **Pages** section
+4. Under **Source**, select **Deploy from a branch**
+5. Select **gh-pages** branch
+6. Click **Save**
+
+#### Step 5: Access Your Live App
+Your app will be available at: `https://YOUR_USERNAME.github.io/readify/`
+
+**Live Demo**: [https://egeerend.github.io/readify/](https://egeerend.github.io/readify/)
+
+### Quick Deployment Commands
+```bash
+# One-liner for quick deployment
+ng build --configuration production --base-href /readify/ && npx angular-cli-ghpages --dir=dist/readify/browser
+
+# Or create an npm script in package.json
+"scripts": {
+  "deploy": "ng build --configuration production --base-href /readify/ && npx angular-cli-ghpages --dir=dist/readify/browser"
+}
+
+# Then run
+npm run deploy
+```
+
 ### GitHub Pages (Current Deployment)
 This app is deployed using GitHub Pages with the `angular-cli-ghpages` tool:
 
 ```bash
-# Build for production
-ng build --configuration production
+# Build for production with correct base href
+ng build --configuration production --base-href /readify/
 
 # Deploy to GitHub Pages
 npm install -g angular-cli-ghpages
@@ -242,6 +300,12 @@ npx angular-cli-ghpages --dir=dist/readify/browser
 ```
 
 **Live Demo**: [https://egeerend.github.io/readify/](https://egeerend.github.io/readify/)
+
+### Important Notes for GitHub Pages Deployment
+- ✅ **Base Href**: Must be set to `/readify/` (repository name)
+- ✅ **Build Path**: Use `dist/readify/browser` for Angular 18
+- ✅ **SPA Support**: 404.html file created automatically for client-side routing
+- ✅ **Asset Paths**: All resources load correctly with proper base href
 
 ### Deployment Features
 - ✅ **Production Build**: Optimized bundle with tree-shaking
@@ -427,4 +491,49 @@ service cloud.firestore {
 
 **Current Status**: ✅ **RESOLVED** - Profile page now loads correctly and handles authentication properly.
 
----
+### Troubleshooting GitHub Pages Deployment
+
+#### Common Issues and Solutions
+
+**1. App shows blank page or 404 errors**
+```bash
+# Solution: Check base href
+ng build --configuration production --base-href /YOUR_REPO_NAME/
+```
+
+**2. Resources not loading (CSS/JS files)**
+```bash
+# Solution: Ensure correct base href and build path
+ng build --configuration production --base-href /readify/
+npx angular-cli-ghpages --dir=dist/readify/browser
+```
+
+**3. Routing not working on GitHub Pages**
+- ✅ The deployment automatically creates a 404.html file
+- ✅ This enables SPA routing on GitHub Pages
+- ✅ All routes will work correctly
+
+**4. Build fails with budget warnings**
+```bash
+# Solution: Already configured in angular.json
+# Budget limits are set to realistic values for production apps
+```
+
+**5. Firebase authentication not working**
+```bash
+# Solution: Add your GitHub Pages domain to Firebase Auth
+# Firebase Console → Authentication → Settings → Authorized domains
+# Add: your-username.github.io
+```
+
+### Update Existing Deployment
+```bash
+# To update your deployed app
+git add .
+git commit -m "Update app"
+git push origin main
+
+# Then rebuild and redeploy
+ng build --configuration production --base-href /readify/
+npx angular-cli-ghpages --dir=dist/readify/browser
+```

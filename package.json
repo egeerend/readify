@@ -6,7 +6,8 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "deploy": "ng build --configuration production --base-href /readify/ && npx angular-cli-ghpages --dir=dist/readify/browser"
   },
   "prettier": {
     "overrides": [
