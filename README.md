@@ -42,6 +42,17 @@ A sophisticated, full-featured bookstore application built with Angular 18 and F
 - **Fast Loading**: Optimized bundle size and lazy loading
 - **SEO Ready**: Server-side rendering ready structure
 
+## 🌐 Live Demo
+
+**[🚀 View Live Application](https://egeerend.github.io/readify/)**
+
+The application is deployed and fully functional on GitHub Pages. You can access all features including:
+- User authentication and profile management
+- Book browsing and searching
+- Shopping cart functionality
+- Admin panel (for authorized users)
+- Responsive design on all devices
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -222,17 +233,22 @@ try {
 This app is deployed using GitHub Pages with the `angular-cli-ghpages` tool:
 
 ```bash
-# Build and deploy to GitHub Pages
-npm run build
-npx angular-cli-ghpages --dir=dist/readify
+# Build for production
+ng build --configuration production
 
-# Or install globally and use
+# Deploy to GitHub Pages
 npm install -g angular-cli-ghpages
-ng build --prod
-ngh --dir=dist/readify
+npx angular-cli-ghpages --dir=dist/readify/browser
 ```
 
 **Live Demo**: [https://egeerend.github.io/readify/](https://egeerend.github.io/readify/)
+
+### Deployment Features
+- ✅ **Production Build**: Optimized bundle with tree-shaking
+- ✅ **Automatic Deployment**: Direct to GitHub Pages
+- ✅ **Custom Domain Ready**: Configure custom domain in GitHub settings
+- ✅ **404 Fallback**: SPA routing support with 404.html
+- ✅ **Jekyll Bypass**: .nojekyll file for proper asset serving
 
 ### Firebase Hosting
 ```bash
