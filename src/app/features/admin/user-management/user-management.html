@@ -74,13 +74,13 @@
         <tr *ngFor="let user of filteredUsers" class="user-row">
           <td class="user-info">
             <img 
-              [src]="user.photoURL || getDefaultAvatar(user.displayName)" 
-              [alt]="user.displayName"
+              [src]="user.photoURL || getDefaultAvatar(user.displayName || user.email)" 
+              [alt]="user.displayName || user.email"
               class="user-avatar"
               (error)="onImageError($event, user)">
             <div class="user-details">
-              <h4>{{ user.displayName }}</h4>
-              <span class="user-id">ID: {{ user.id }}</span>
+              <h4>{{ user.displayName || user.email }}</h4>
+              <span class="user-id">ID: {{ user.uid }}</span>
             </div>
           </td>
           <td class="user-email">{{ user.email }}</td>
@@ -168,11 +168,11 @@
     <div class="user-detail-content">
       <div class="user-profile">
         <img 
-          [src]="selectedUser.photoURL || getDefaultAvatar(selectedUser.displayName)" 
-          [alt]="selectedUser.displayName"
+          [src]="selectedUser.photoURL || getDefaultAvatar(selectedUser.displayName || selectedUser.email)" 
+          [alt]="selectedUser.displayName || selectedUser.email"
           class="profile-avatar">
         <div class="profile-info">
-          <h3>{{ selectedUser.displayName }}</h3>
+          <h3>{{ selectedUser.displayName || selectedUser.email }}</h3>
           <p class="profile-email">{{ selectedUser.email }}</p>
           <div class="profile-badges">
             <span class="role-badge" [class]="'role-' + selectedUser.role">

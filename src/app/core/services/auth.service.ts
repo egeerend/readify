@@ -12,7 +12,8 @@ import {
   setDoc, 
   getDoc, 
   collection, 
-  addDoc 
+  addDoc, 
+  getDocs 
 } from 'firebase/firestore';
 import { auth, db } from '../firebase.config';
 import { BehaviorSubject, Observable } from 'rxjs';
@@ -23,13 +24,46 @@ export interface UserProfile {
   displayName?: string;
   firstName?: string;
   lastName?: string;
+  photoURL?: string;
   role?: 'user' | 'admin';
+  isActive?: boolean;
   createdAt: Date;
-  lastLoginAt: Date;
+  lastLoginAt?: Date;
+  totalOrders?: number;
+  totalSpent?: number;
+  gender?: 'male' | 'female' | 'other' | 'prefer-not-to-say';
+  dateOfBirth?: Date;
+  phone?: string;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    zipCode?: string;
+  };
+  wishlist?: string[]; // Array of book IDs
+  reviews?: Review[];
   preferences?: {
     favoriteGenres?: string[];
     newsletter?: boolean;
+    language?: string;
+    currency?: string;
+    notifications?: {
+      email?: boolean;
+      sms?: boolean;
+      push?: boolean;
+    };
   };
+}
+
+export interface Review {
+  id: string;
+  bookId: string;
+  bookTitle: string;
+  rating: number;
+  comment: string;
+  createdAt: Date;
+  helpful?: number;
 }
 
 @Injectable({
@@ -106,11 +140,23 @@ export class AuthService {
       firstName,
       lastName,
       role: 'user', // Default role is user
+      isActive: true, // Default to active
       createdAt: new Date(),
       lastLoginAt: new Date(),
+      totalOrders: 0,
+      totalSpent: 0,
+      wishlist: [],
+      reviews: [],
       preferences: {
         favoriteGenres: [],
-        newsletter: false
+        newsletter: false,
+        language: 'en',
+        currency: 'USD',
+        notifications: {
+          email: true,
+          sms: false,
+          push: true
+        }
       }
     };
 
@@ -149,20 +195,159 @@ export class AuthService {
     }
   }
 
-  // Update user profile
+  // Get all users (admin only)
+  async getAllUsers(): Promise<UserProfile[]> {
+    try {
+      const usersCollection = collection(db, 'users');
+      const querySnapshot = await getDocs(usersCollection);
+      
+      const users: UserProfile[] = [];
+      querySnapshot.forEach((doc) => {
+        const userData = doc.data() as UserProfile;
+        users.push({
+          ...userData,
+          uid: doc.id
+        });
+      });
+      
+      return users.sort((a, b) => {
+        // Sort by creation date, newest first
+        const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt || 0);
+        const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt || 0);
+        return dateB.getTime() - dateA.getTime();
+      });
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      throw new Error('Failed to fetch users');
+    }
+  }
+
+  // Update user profile (admin only)
   async updateUserProfile(uid: string, updates: Partial<UserProfile>): Promise<void> {
     try {
       const userRef = doc(db, 'users', uid);
       await setDoc(userRef, updates, { merge: true });
     } catch (error) {
       console.error('Error updating user profile:', error);
+      throw new Error('Failed to update user profile');
+    }
+  }
+
+  // Deactivate user (admin only)
+  async deactivateUser(uid: string): Promise<void> {
+    try {
+      const userRef = doc(db, 'users', uid);
+      await setDoc(userRef, { 
+        isActive: false,
+        deactivatedAt: new Date()
+      }, { merge: true });
+    } catch (error) {
+      console.error('Error deactivating user:', error);
+      throw new Error('Failed to deactivate user');
+    }
+  }
+
+  // Reactivate user (admin only)
+  async reactivateUser(uid: string): Promise<void> {
+    try {
+      const userRef = doc(db, 'users', uid);
+      await setDoc(userRef, { 
+        isActive: true,
+        reactivatedAt: new Date()
+      }, { merge: true });
+    } catch (error) {
+      console.error('Error reactivating user:', error);
+      throw new Error('Failed to reactivate user');
+    }
+  }
+
+  // Update user profile (for user's own profile)
+  async updateCurrentUserProfile(updates: Partial<UserProfile>): Promise<void> {
+    const currentUser = this.getCurrentUser();
+    if (!currentUser) {
+      throw new Error('No user logged in');
+    }
+
+    try {
+      const userRef = doc(db, 'users', currentUser.uid);
+      await setDoc(userRef, updates, { merge: true });
+      
+      // Update the local profile
+      const updatedProfile = await this.getUserProfile(currentUser.uid);
+      this.currentUserProfileSubject.next(updatedProfile);
+    } catch (error) {
+      console.error('Error updating user profile:', error);
       throw new Error('Failed to update profile');
     }
   }
 
-  // Get current user
-  getCurrentUser(): User | null {
-    return this.currentUserSubject.value;
+  // Add book to wishlist
+  async addToWishlist(bookId: string): Promise<void> {
+    const currentUser = this.getCurrentUser();
+    const currentProfile = this.getCurrentUserProfile();
+    
+    if (!currentUser || !currentProfile) {
+      throw new Error('No user logged in');
+    }
+
+    try {
+      const currentWishlist = currentProfile.wishlist || [];
+      if (!currentWishlist.includes(bookId)) {
+        const updatedWishlist = [...currentWishlist, bookId];
+        await this.updateCurrentUserProfile({ wishlist: updatedWishlist });
+      }
+    } catch (error) {
+      console.error('Error adding to wishlist:', error);
+      throw new Error('Failed to add to wishlist');
+    }
+  }
+
+  // Remove book from wishlist
+  async removeFromWishlist(bookId: string): Promise<void> {
+    const currentUser = this.getCurrentUser();
+    const currentProfile = this.getCurrentUserProfile();
+    
+    if (!currentUser || !currentProfile) {
+      throw new Error('No user logged in');
+    }
+
+    try {
+      const currentWishlist = currentProfile.wishlist || [];
+      const updatedWishlist = currentWishlist.filter(id => id !== bookId);
+      await this.updateCurrentUserProfile({ wishlist: updatedWishlist });
+    } catch (error) {
+      console.error('Error removing from wishlist:', error);
+      throw new Error('Failed to remove from wishlist');
+    }
+  }
+
+  // Add review
+  async addReview(bookId: string, bookTitle: string, rating: number, comment: string): Promise<void> {
+    const currentUser = this.getCurrentUser();
+    const currentProfile = this.getCurrentUserProfile();
+    
+    if (!currentUser || !currentProfile) {
+      throw new Error('No user logged in');
+    }
+
+    try {
+      const newReview: Review = {
+        id: Date.now().toString(),
+        bookId,
+        bookTitle,
+        rating,
+        comment,
+        createdAt: new Date(),
+        helpful: 0
+      };
+
+      const currentReviews = currentProfile.reviews || [];
+      const updatedReviews = [...currentReviews, newReview];
+      await this.updateCurrentUserProfile({ reviews: updatedReviews });
+    } catch (error) {
+      console.error('Error adding review:', error);
+      throw new Error('Failed to add review');
+    }
   }
 
   // Check if user is authenticated
@@ -174,6 +359,11 @@ export class AuthService {
   isAdmin(): boolean {
     const profile = this.currentUserProfileSubject.value;
     return profile?.role === 'admin';
+  }
+
+  // Get current user
+  getCurrentUser(): User | null {
+    return this.currentUserSubject.value;
   }
 
   // Get current user profile

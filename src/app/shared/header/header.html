@@ -41,13 +41,13 @@
           <div class="user-info">
             <span class="user-name">👤 {{ currentUser.displayName || currentUser.email }}</span>
             <div class="user-dropdown">
-              <button class="dropdown-item">Profile</button>
-              <button class="dropdown-item">My Books</button>
-              <button class="dropdown-item">Settings</button>
+              <button class="dropdown-item" routerLink="/profile">👤 Profile</button>
+              <button class="dropdown-item">📚 My Books</button>
+              <button class="dropdown-item">⚙️ Settings</button>
               <button *ngIf="isAdmin()" class="dropdown-item admin-link" routerLink="/admin">
                 🔧 Admin Panel
               </button>
-              <button class="dropdown-item logout-btn" (click)="signOut()">Sign Out</button>
+              <button class="dropdown-item logout-btn" (click)="signOut()">🚪 Sign Out</button>
             </div>
           </div>
         </div>

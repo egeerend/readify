@@ -1,0 +1,405 @@
+<div class="profile-container">
+  <!-- Loading State -->
+  <div *ngIf="!user" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading profile...</p>
+  </div>
+
+  <!-- Profile Content -->
+  <div *ngIf="user">
+    <!-- Profile Header -->
+    <div class="profile-header">
+    <div class="profile-avatar">
+      <img [src]="getProfileImage()" [alt]="getFullName()" class="avatar-img">
+      <button class="edit-avatar-btn" *ngIf="isEditing">📷</button>
+    </div>
+    <div class="profile-info">
+      <h1>{{ getFullName() }}</h1>
+      <p class="email">{{ user.email }}</p>
+      <p class="member-since">Member since {{ formatDate(user.createdAt!) }}</p>
+      <div class="profile-stats">
+        <div class="stat">
+          <span class="stat-number">{{ user.totalOrders || 0 }}</span>
+          <span class="stat-label">Orders</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">{{ getWishlistCount() }}</span>
+          <span class="stat-label">Wishlist</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">{{ getReviewsCount() }}</span>
+          <span class="stat-label">Reviews</span>
+        </div>
+        <div class="stat" *ngIf="getAverageRating() > 0">
+          <span class="stat-number">{{ getAverageRating() }}⭐</span>
+          <span class="stat-label">Avg Rating</span>
+        </div>
+      </div>
+    </div>
+    <div class="profile-actions">
+      <button class="btn btn-primary" (click)="toggleEdit()" *ngIf="!isEditing">
+        ✏️ Edit Profile
+      </button>
+      <div class="edit-actions" *ngIf="isEditing">
+        <button class="btn btn-success" (click)="saveProfile()" [disabled]="loading">
+          {{ loading ? 'Saving...' : '💾 Save' }}
+        </button>
+        <button class="btn btn-secondary" (click)="toggleEdit()">
+          ❌ Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div class="alert alert-success" *ngIf="success">
+    {{ success }}
+    <button class="close-btn" (click)="clearMessages()">×</button>
+  </div>
+  <div class="alert alert-error" *ngIf="error">
+    {{ error }}
+    <button class="close-btn" (click)="clearMessages()">×</button>
+  </div>
+
+  <!-- Profile Tabs -->
+  <div class="profile-tabs">
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'personal'"
+      (click)="setActiveTab('personal')">
+      👤 Personal Info
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'address'"
+      (click)="setActiveTab('address')">
+      📍 Address
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'preferences'"
+      (click)="setActiveTab('preferences')">
+      ⚙️ Preferences
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'security'"
+      (click)="setActiveTab('security')">
+      🔒 Security
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'activity'"
+      (click)="setActiveTab('activity')">
+      📊 Activity
+    </button>
+  </div>
+
+  <!-- Tab Content -->
+  <div class="tab-content">
+    <!-- Personal Info Tab -->
+    <div class="tab-panel" *ngIf="activeTab === 'personal'">
+      <h2>Personal Information</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>First Name</label>
+          <input 
+            type="text" 
+            [(ngModel)]="editForm.firstName" 
+            [disabled]="!isEditing"
+            class="form-input">
+        </div>
+        <div class="form-group">
+          <label>Last Name</label>
+          <input 
+            type="text" 
+            [(ngModel)]="editForm.lastName" 
+            [disabled]="!isEditing"
+            class="form-input">
+        </div>
+        <div class="form-group">
+          <label>Display Name</label>
+          <input 
+            type="text" 
+            [(ngModel)]="editForm.displayName" 
+            [disabled]="!isEditing"
+            class="form-input">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input 
+            type="email" 
+            [(ngModel)]="editForm.email" 
+            [disabled]="true"
+            class="form-input">
+          <small class="form-help">Email cannot be changed</small>
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <input 
+            type="tel" 
+            [(ngModel)]="editForm.phone" 
+            [disabled]="!isEditing"
+            class="form-input">
+        </div>
+        <div class="form-group">
+          <label>Gender</label>
+          <select 
+            [(ngModel)]="editForm.gender" 
+            [disabled]="!isEditing"
+            class="form-select">
+            <option value="">Select gender</option>
+            <option [value]="option.value" *ngFor="let option of genderOptions">
+              {{ option.label }}
+            </option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Date of Birth</label>
+          <input 
+            type="date" 
+            [(ngModel)]="editForm.dateOfBirth" 
+            [disabled]="!isEditing"
+            class="form-input">
+        </div>
+      </div>
+    </div>
+
+    <!-- Address Tab -->
+    <div class="tab-panel" *ngIf="activeTab === 'address'">
+      <h2>Address Information</h2>
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label>Street Address</label>
+          <input 
+            type="text" 
+            [(ngModel)]="editForm.address.street" 
+            [disabled]="!isEditing"
+            class="form-input">
+        </div>
+        <div class="form-group">
+          <label>City</label>
+          <input 
+            type="text" 
+            [(ngModel)]="editForm.address.city" 
+            [disabled]="!isEditing"
+            class="form-input">
+        </div>
+        <div class="form-group">
+          <label>State/Province</label>
+          <input 
+            type="text" 
+            [(ngModel)]="editForm.address.state" 
+            [disabled]="!isEditing"
+            class="form-input">
+        </div>
+        <div class="form-group">
+          <label>Country</label>
+          <input 
+            type="text" 
+            [(ngModel)]="editForm.address.country" 
+            [disabled]="!isEditing"
+            class="form-input">
+        </div>
+        <div class="form-group">
+          <label>ZIP/Postal Code</label>
+          <input 
+            type="text" 
+            [(ngModel)]="editForm.address.zipCode" 
+            [disabled]="!isEditing"
+            class="form-input">
+        </div>
+      </div>
+    </div>
+
+    <!-- Preferences Tab -->
+    <div class="tab-panel" *ngIf="activeTab === 'preferences'">
+      <h2>Preferences</h2>
+      
+      <!-- Favorite Genres -->
+      <div class="form-section">
+        <h3>Favorite Genres</h3>
+        <div class="checkbox-grid">
+          <label class="checkbox-label" *ngFor="let genre of genreOptions">
+            <input 
+              type="checkbox" 
+              [checked]="isGenreSelected(genre)"
+              (change)="onGenreChange(genre, $event)"
+              [disabled]="!isEditing">
+            <span class="checkbox-text">{{ genre }}</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Other Preferences -->
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Language</label>
+          <select 
+            [(ngModel)]="editForm.preferences.language" 
+            [disabled]="!isEditing"
+            class="form-select">
+            <option [value]="lang.value" *ngFor="let lang of languageOptions">
+              {{ lang.label }}
+            </option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Currency</label>
+          <select 
+            [(ngModel)]="editForm.preferences.currency" 
+            [disabled]="!isEditing"
+            class="form-select">
+            <option [value]="curr.value" *ngFor="let curr of currencyOptions">
+              {{ curr.label }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Notification Preferences -->
+      <div class="form-section">
+        <h3>Notifications</h3>
+        <div class="checkbox-list">
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="editForm.preferences.newsletter"
+              [disabled]="!isEditing">
+            <span class="checkbox-text">📧 Newsletter subscription</span>
+          </label>
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="editForm.preferences.notifications.email"
+              [disabled]="!isEditing">
+            <span class="checkbox-text">✉️ Email notifications</span>
+          </label>
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="editForm.preferences.notifications.sms"
+              [disabled]="!isEditing">
+            <span class="checkbox-text">📱 SMS notifications</span>
+          </label>
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="editForm.preferences.notifications.push"
+              [disabled]="!isEditing">
+            <span class="checkbox-text">🔔 Push notifications</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Tab -->
+    <div class="tab-panel" *ngIf="activeTab === 'security'">
+      <h2>Security Settings</h2>
+      
+      <!-- Password Reset -->
+      <div class="security-section">
+        <h3>Password Reset</h3>
+        <p>Enter your email address to receive a password reset link:</p>
+        <div class="form-group">
+          <input 
+            type="email" 
+            [(ngModel)]="resetPasswordEmail" 
+            placeholder="Enter your email"
+            class="form-input">
+          <button 
+            class="btn btn-primary"
+            (click)="sendPasswordReset()"
+            [disabled]="resetPasswordLoading">
+            {{ resetPasswordLoading ? 'Sending...' : '🔄 Send Reset Email' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Account Status -->
+      <div class="security-section">
+        <h3>Account Status</h3>
+        <div class="status-info">
+          <div class="status-item">
+            <span class="status-label">Account Status:</span>
+            <span class="status-value" [class]="user.isActive ? 'active' : 'inactive'">
+              {{ user.isActive ? '✅ Active' : '❌ Inactive' }}
+            </span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Role:</span>
+            <span class="status-value" [class]="user.role">
+              {{ user.role === 'admin' ? '👑 Admin' : '👤 User' }}
+            </span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Last Login:</span>
+            <span class="status-value">
+              {{ user && user.lastLoginAt ? formatDate(user.lastLoginAt) : 'Never' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activity Tab -->
+    <div class="tab-panel" *ngIf="activeTab === 'activity'">
+      <h2>Activity Overview</h2>
+      
+      <!-- Quick Stats -->
+      <div class="activity-stats">
+        <div class="stat-card">
+          <h3>📚 Total Orders</h3>
+          <div class="stat-number">{{ user.totalOrders || 0 }}</div>
+        </div>
+        <div class="stat-card">
+          <h3>💰 Total Spent</h3>
+          <div class="stat-number">${{ user.totalSpent || 0 }}</div>
+        </div>
+        <div class="stat-card">
+          <h3>❤️ Wishlist Items</h3>
+          <div class="stat-number">{{ getWishlistCount() }}</div>
+        </div>
+        <div class="stat-card">
+          <h3>⭐ Reviews Written</h3>
+          <div class="stat-number">{{ getReviewsCount() }}</div>
+        </div>
+      </div>
+
+      <!-- Recent Reviews -->
+      <div class="activity-section" *ngIf="user?.reviews?.length">
+        <h3>Recent Reviews</h3>
+        <div class="reviews-list">
+          <div class="review-item" *ngFor="let review of (user?.reviews || []).slice(-5)">
+            <div class="review-header">
+              <h4>{{ review.bookTitle }}</h4>
+              <div class="review-rating">
+                <span class="stars">{{ '⭐'.repeat(review.rating) }}</span>
+                <span class="rating-text">{{ review.rating }}/5</span>
+              </div>
+            </div>
+            <p class="review-comment">{{ review.comment }}</p>
+            <div class="review-date">{{ formatDate(review.createdAt) }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="activity-section">
+        <h3>Quick Actions</h3>
+        <div class="quick-actions">
+          <button class="action-btn" (click)="viewWishlist()">
+            ❤️ View Wishlist
+          </button>
+          <button class="action-btn" routerLink="/orders">
+            📦 Order History
+          </button>
+          <button class="action-btn" routerLink="/books">
+            📚 Browse Books
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div> <!-- Close *ngIf="user" -->
+</div>
